@@ -50,7 +50,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-001: Monorepo scaffold & conventions
-**Sprint:** 1   **Points:** S   **Depends on:** —   **Area:** INFRA
+**Sprint:** 1   **Points:** S   **Depends on:** —   **Area:** INFRA   **Assigned to:** Saurish
 **Description:** Initialize `frontend/` (Next.js) and `backend/` (FastAPI) in the existing git repo. Add root-level `README.md`, `.editorconfig`, `.gitignore`, and `.nvmrc` / `.python-version`.
 **Acceptance criteria:**
 - [ ] `frontend/` and `backend/` directories created with placeholder READMEs
@@ -61,7 +61,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-002: GitHub Actions CI
-**Sprint:** 1   **Points:** S   **Depends on:** DD-001   **Area:** INFRA
+**Sprint:** 1   **Points:** S   **Depends on:** DD-001   **Area:** INFRA   **Assigned to:** Saurish
 **Description:** Two workflows — `frontend.yml` runs `pnpm lint && pnpm typecheck` on PRs touching `frontend/**`; `backend.yml` runs `ruff check && mypy` on PRs touching `backend/**`.
 **Acceptance criteria:**
 - [ ] Failing lint blocks PR merge
@@ -71,7 +71,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-003: Next.js 16 scaffold + Tailwind + shadcn/ui
-**Sprint:** 1   **Points:** M   **Depends on:** DD-001   **Area:** FE
+**Sprint:** 1   **Points:** M   **Depends on:** DD-001   **Area:** FE   **Assigned to:** Matt
 **Description:** `create-next-app` with TypeScript, App Router, Tailwind. Install `shadcn/ui` CLI and initialize. Remove boilerplate; add a simple `/` landing route.
 **Acceptance criteria:**
 - [ ] Next.js 16, App Router, TypeScript strict mode enabled
@@ -82,7 +82,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-004: Monaco editor integration
-**Sprint:** 1   **Points:** M   **Depends on:** DD-003   **Area:** FE
+**Sprint:** 1   **Points:** M   **Depends on:** DD-003   **Area:** FE   **Assigned to:** Matt
 **Description:** Install `@monaco-editor/react` and `monaco-editor`. Create `<CodeEditor />` component that loads Monaco via `next/dynamic` with `ssr: false`. Default language Python, dark theme.
 **Acceptance criteria:**
 - [ ] Editor renders on a test page `/editor-test`
@@ -94,7 +94,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-005: FastAPI backend scaffold
-**Sprint:** 1   **Points:** S   **Depends on:** DD-001   **Area:** BE
+**Sprint:** 1   **Points:** S   **Depends on:** DD-001   **Area:** BE   **Assigned to:** Arti
 **Description:** Initialize FastAPI app in `backend/`. Add `GET /health` returning `{"status": "ok"}`. Add `poetry` or `uv` for dependency management. Set up `ruff` + `mypy` configs.
 **Acceptance criteria:**
 - [ ] `uvicorn main:app --reload` runs locally
@@ -105,7 +105,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-006: Judge0 RapidAPI adapter
-**Sprint:** 1   **Points:** M   **Depends on:** DD-005   **Area:** BE
+**Sprint:** 1   **Points:** M   **Depends on:** DD-005   **Area:** BE   **Assigned to:** Arti
 **Description:** Thin Python wrapper around Judge0 CE via RapidAPI. Expose `async def run_python(code: str, stdin: str) -> RunResult` that submits code, polls for completion, returns stdout/stderr/status.
 **Acceptance criteria:**
 - [ ] Returns `RunResult(stdout, stderr, status, time_ms)`
@@ -117,7 +117,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-007: Supabase project + schema v1
-**Sprint:** 1   **Points:** M   **Depends on:** DD-001   **Area:** DB
+**Sprint:** 1   **Points:** M   **Depends on:** DD-001   **Area:** DB   **Assigned to:** Rayan
 **Description:** Create Supabase project (free tier). Write initial SQL migration for `problems`, `test_cases`, `submissions`, `profiles` tables per PRD §8. Commit migration to `backend/migrations/0001_init.sql`.
 **Acceptance criteria:**
 - [ ] Migration applied to Supabase via `supabase db push`
@@ -129,7 +129,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-008: Seed one hardcoded problem
-**Sprint:** 1   **Points:** S   **Depends on:** DD-007   **Area:** CONTENT
+**Sprint:** 1   **Points:** S   **Depends on:** DD-007   **Area:** CONTENT   **Assigned to:** Rayan
 **Description:** Manually author one problem (Two Sum with a nested-loop slop variant). Write a SQL insert script in `backend/seeds/0001_two_sum.sql` that inserts the `problems` row + 3 `test_cases` rows.
 **Acceptance criteria:**
 - [ ] Problem statement describes Two Sum
@@ -142,7 +142,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-009: Submission endpoint (sync v1)
-**Sprint:** 1   **Points:** M   **Depends on:** DD-006, DD-007, DD-008   **Area:** BE
+**Sprint:** 1   **Points:** M   **Depends on:** DD-006, DD-007, DD-008   **Area:** BE   **Assigned to:** Arti
 **Description:** `POST /api/v1/submissions` with body `{problem_id, code}`. Synchronously runs user code against the first test case via Judge0, returns `{verdict: "pass" | "fail", stdout}`. No auth yet. No differential testing yet (just exact-match to a hardcoded expected string for the single problem).
 **Acceptance criteria:**
 - [ ] Endpoint responds in < 10s for the Two Sum problem
@@ -154,7 +154,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-010: Problem page with editor + submit
-**Sprint:** 1   **Points:** M   **Depends on:** DD-004, DD-009   **Area:** FE
+**Sprint:** 1   **Points:** M   **Depends on:** DD-004, DD-009   **Area:** FE   **Assigned to:** Matt
 **Description:** Route `/problems/[id]` — fetches problem from Supabase (client-side is fine for sprint 1), shows description on left, Monaco editor pre-loaded with `slop_code` on right, Submit button calls FastAPI and shows result banner.
 **Acceptance criteria:**
 - [ ] Problem description renders markdown
@@ -167,7 +167,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-011: Deploy FE + BE to Vercel + Railway
-**Sprint:** 1   **Points:** M   **Depends on:** DD-010   **Area:** INFRA
+**Sprint:** 1   **Points:** M   **Depends on:** DD-010   **Area:** INFRA   **Assigned to:** Saurish
 **Description:** Deploy frontend to Vercel (connect GitHub, auto-deploys on main). Deploy FastAPI to Railway (Python service, `uvicorn main:app --host 0.0.0.0 --port $PORT`). Wire up environment variables on both.
 **Acceptance criteria:**
 - [ ] Vercel URL serves the landing page
@@ -179,7 +179,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-012: End-to-end smoke test & sprint 1 demo
-**Sprint:** 1   **Points:** S   **Depends on:** DD-011   **Area:** INFRA
+**Sprint:** 1   **Points:** S   **Depends on:** DD-011   **Area:** INFRA   **Assigned to:** Saurish
 **Description:** Record a 30-second screen capture: open deployed URL → click problem → edit slop → submit → pass. Check into `docs/demos/sprint1.mp4`. Write 5-line smoke-test checklist in README.
 **Acceptance criteria:**
 - [ ] Video checked in (or linked)
@@ -197,7 +197,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-013: Supabase GitHub OAuth setup
-**Sprint:** 2   **Points:** M   **Depends on:** DD-007   **Area:** AUTH
+**Sprint:** 2   **Points:** M   **Depends on:** DD-007   **Area:** AUTH   **Assigned to:** Rayan
 **Description:** Create a GitHub OAuth app, register callback URL with Supabase, enable GitHub provider in Supabase dashboard. Add `profiles` trigger that inserts a row on new user signup copying `user_metadata.user_name` → `github_username`.
 **Acceptance criteria:**
 - [ ] "Sign in with GitHub" works from Supabase auth UI
@@ -207,7 +207,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-014: Next.js auth middleware + Supabase SSR
-**Sprint:** 2   **Points:** M   **Depends on:** DD-013   **Area:** FE
+**Sprint:** 2   **Points:** M   **Depends on:** DD-013   **Area:** FE   **Assigned to:** Matt
 **Description:** Install `@supabase/ssr`. Add `middleware.ts` that refreshes the session cookie on every request. Add `/login` page with GitHub button and `/account` protected page showing username.
 **Acceptance criteria:**
 - [ ] `/login` → clicking GitHub redirects and returns authenticated
@@ -218,7 +218,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-015: RLS policies for submissions
-**Sprint:** 2   **Points:** M   **Depends on:** DD-013   **Area:** DB
+**Sprint:** 2   **Points:** M   **Depends on:** DD-013   **Area:** DB   **Assigned to:** Saurish
 **Description:** Migration `0002_rls.sql`. Enable RLS on `submissions`. Policies: (a) authenticated user can INSERT with their own user_id, (b) authenticated user can SELECT rows where user_id = auth.uid(), (c) nobody can UPDATE or DELETE (backend uses `service_role` for write-after-judging).
 **Acceptance criteria:**
 - [ ] Integration test: user A cannot SELECT user B's submission (with anon key)
@@ -228,7 +228,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-016: Gemini client wrapper
-**Sprint:** 2   **Points:** S   **Depends on:** DD-005   **Area:** AI
+**Sprint:** 2   **Points:** S   **Depends on:** DD-005   **Area:** AI   **Assigned to:** Rayan
 **Description:** Install `google-genai` SDK. Wrap in `backend/llm/gemini.py` with `async def chat(prompt: str, system: str | None = None) -> str`. Reads `GEMINI_API_KEY` from env. Uses model `gemini-2.5-flash`.
 **Acceptance criteria:**
 - [ ] Returns string response
@@ -239,7 +239,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-017: Slop-generation prompt + CLI
-**Sprint:** 2   **Points:** M   **Depends on:** DD-016   **Area:** AI
+**Sprint:** 2   **Points:** M   **Depends on:** DD-016   **Area:** AI   **Assigned to:** Rayan
 **Description:** Prompt template (`backend/prompts/slop_gen.txt`) that takes a correct reference solution + bug category and returns a modified function with exactly that bug. CLI: `python -m backend.cli.slopify --reference file.py --category off_by_one`.
 **Acceptance criteria:**
 - [ ] Prompt produces a valid Python function (syntactically parseable)
@@ -250,7 +250,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-018: Test case generator prompt + CLI
-**Sprint:** 2   **Points:** M   **Depends on:** DD-016   **Area:** AI
+**Sprint:** 2   **Points:** M   **Depends on:** DD-016   **Area:** AI   **Assigned to:** Rayan
 **Description:** Prompt template that generates 8 test case inputs given a function signature + description. CLI: `python -m backend.cli.gen_tests --signature "def two_sum(nums, target):" --description "..."`.
 **Acceptance criteria:**
 - [ ] Returns 8 newline-delimited stdin strings
@@ -260,7 +260,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-019: Problem seeder CLI
-**Sprint:** 2   **Points:** M   **Depends on:** DD-017, DD-018   **Area:** AI
+**Sprint:** 2   **Points:** M   **Depends on:** DD-017, DD-018   **Area:** AI   **Assigned to:** Arti
 **Description:** End-to-end CLI: `python -m backend.cli.seed_problem --spec spec.yaml`. Spec contains title, description, difficulty, reference_solution, target_complexity, desired bug categories. Runs slop gen → test gen → oracle verify (reference runs clean) → slop verify (fails at least one case) → insert into Supabase as `status='draft'`.
 **Acceptance criteria:**
 - [ ] End-to-end works on two_sum spec
@@ -272,7 +272,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-020: LLM feedback card generator
-**Sprint:** 2   **Points:** M   **Depends on:** DD-016   **Area:** AI
+**Sprint:** 2   **Points:** M   **Depends on:** DD-016   **Area:** AI   **Assigned to:** Rayan
 **Description:** `async def generate_feedback(problem, verdict, bug_category, cases_passed, cases_total) -> str`. Returns 2-3 sentence markdown explaining the bug and why the fix works. **Does not take user code as input** (prompt injection guard).
 **Acceptance criteria:**
 - [ ] Returns markdown, not JSON
@@ -283,7 +283,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-021: Differential testing harness
-**Sprint:** 2   **Points:** L   **Depends on:** DD-006   **Area:** BE
+**Sprint:** 2   **Points:** L   **Depends on:** DD-006   **Area:** BE   **Assigned to:** Arti
 **Description:** `async def run_differential(user_code, reference_code, test_cases) -> DifferentialResult`. For each test case: submit both to Judge0 in parallel, compare stdouts (whitespace-normalized, trailing newline ignored). Returns list of (case_idx, passed, user_stdout, ref_stdout).
 **Acceptance criteria:**
 - [ ] Parallel execution via `asyncio.gather` across cases
@@ -294,7 +294,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-022: Async submission endpoint v2
-**Sprint:** 2   **Points:** L   **Depends on:** DD-015, DD-021   **Area:** BE
+**Sprint:** 2   **Points:** L   **Depends on:** DD-015, DD-021   **Area:** BE   **Assigned to:** Arti
 **Description:** Upgrade `POST /api/v1/submissions`: (1) verifies Supabase JWT, (2) inserts `submissions` row with `verdict='pending'`, (3) kicks off background task for differential testing + feedback card, (4) returns submission id immediately. New `GET /api/v1/submissions/{id}` returns current state.
 **Acceptance criteria:**
 - [ ] `POST` returns 202 + `{id}` in < 200ms
@@ -306,7 +306,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-023: Next.js API proxy + typed client
-**Sprint:** 2   **Points:** M   **Depends on:** DD-022   **Area:** FE
+**Sprint:** 2   **Points:** M   **Depends on:** DD-022   **Area:** FE   **Assigned to:** Arti
 **Description:** Create `/api/submissions` Next.js route handlers that proxy to FastAPI, adding the Supabase JWT. Generate a typed client from FastAPI's OpenAPI schema using `openapi-typescript`.
 **Acceptance criteria:**
 - [ ] No direct browser → FastAPI calls (all through Next.js API routes)
@@ -316,7 +316,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-024: Problem browser page
-**Sprint:** 2   **Points:** M   **Depends on:** DD-014   **Area:** FE
+**Sprint:** 2   **Points:** M   **Depends on:** DD-014   **Area:** FE   **Assigned to:** Matt
 **Description:** Route `/problems`. Lists all published problems with columns: title, difficulty, bug_category. Basic filter controls: difficulty chips (easy/medium/hard) and bug_category chips. Click row → `/problems/[id]`.
 **Acceptance criteria:**
 - [ ] SSR-renders the list (server component + Supabase server client)
@@ -327,7 +327,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-025: Feedback card UI component
-**Sprint:** 2   **Points:** S   **Depends on:** DD-020, DD-022   **Area:** FE
+**Sprint:** 2   **Points:** S   **Depends on:** DD-020, DD-022   **Area:** FE   **Assigned to:** Arti
 **Description:** After submission verdict returns, render the feedback card below the verdict banner. Skeleton loader while `feedback_card` is still `null` in the polled response.
 **Acceptance criteria:**
 - [ ] Shown only on `verdict === 'pass'` or after clicking "See explanation" on failure
@@ -337,7 +337,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-026: Submission history page
-**Sprint:** 2   **Points:** M   **Depends on:** DD-015   **Area:** FE
+**Sprint:** 2   **Points:** M   **Depends on:** DD-015   **Area:** FE   **Assigned to:** Matt
 **Description:** Route `/submissions`. Shows the logged-in user's submissions, newest first, with columns: problem title (link), verdict, cases passed, timestamp. Click a row → `/submissions/[id]` showing the submitted code + feedback.
 **Acceptance criteria:**
 - [ ] Protected route (redirects if logged out)
@@ -347,7 +347,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-027: Seed 10 reviewed problems
-**Sprint:** 2   **Points:** L   **Depends on:** DD-019   **Area:** CONTENT
+**Sprint:** 2   **Points:** L   **Depends on:** DD-019   **Area:** CONTENT   **Assigned to:** Saurish
 **Description:** Write 10 problem specs (spec.yaml files). Run the seeder on each. Two team members cross-review each one, mark `status='published'`. Target: 3 easy / 5 medium / 2 hard, covering 4+ of the 6 bug categories.
 **Acceptance criteria:**
 - [ ] 10 published problems in Supabase
@@ -364,7 +364,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-028: AST complexity analyzer
-**Sprint:** 3   **Points:** L   **Depends on:** DD-022   **Area:** AI
+**Sprint:** 3   **Points:** L   **Depends on:** DD-022   **Area:** AI   **Assigned to:** Arti
 **Description:** `def analyze_complexity(python_code: str) -> ComplexityTier`. Walks AST with a custom `ast.NodeVisitor`. Detects: nested loops (O(n²)+), sort inside loop, linear `in` on list inside loop, recomputed expressions. Returns one of: `O(1)`, `O(log n)`, `O(n)`, `O(n log n)`, `O(n²)`, `O(n³+)`, `unknown`.
 **Acceptance criteria:**
 - [ ] Correctly classifies 10 hand-crafted test fixtures (one per tier + edge cases)
@@ -375,7 +375,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-029: Verdict logic v2 (pass/partial/fail)
-**Sprint:** 3   **Points:** M   **Depends on:** DD-028   **Area:** BE
+**Sprint:** 3   **Points:** M   **Depends on:** DD-028   **Area:** BE   **Assigned to:** Arti
 **Description:** Update submission processor: after differential test, run AST analyzer on user code. Compute verdict:
 - `fail` — any test case incorrect OR runtime error
 - `partial` — all cases correct but detected complexity > target
@@ -389,7 +389,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-030: Verdict UI with complexity breakdown
-**Sprint:** 3   **Points:** M   **Depends on:** DD-029   **Area:** FE
+**Sprint:** 3   **Points:** M   **Depends on:** DD-029   **Area:** FE   **Assigned to:** Matt
 **Description:** Update submission result page to show: overall verdict badge (green/yellow/red), cases passed (`N/M`), detected complexity vs. target complexity, feedback card below.
 **Acceptance criteria:**
 - [ ] Three distinct visuals for pass/partial/fail
@@ -399,7 +399,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-031: Leaderboard RPC + query
-**Sprint:** 3   **Points:** M   **Depends on:** DD-022   **Area:** DB
+**Sprint:** 3   **Points:** M   **Depends on:** DD-022   **Area:** DB   **Assigned to:** Saurish
 **Description:** Postgres `SECURITY DEFINER` function `leaderboard_top(limit int)` that returns `(github_username, avatar_url, problems_solved)` sorted desc. Counts distinct `problem_id` where any submission has `verdict='pass'`. Public-readable.
 **Acceptance criteria:**
 - [ ] Function returns top N users
@@ -410,7 +410,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-032: Leaderboard page
-**Sprint:** 3   **Points:** S   **Depends on:** DD-031   **Area:** FE
+**Sprint:** 3   **Points:** S   **Depends on:** DD-031   **Area:** FE   **Assigned to:** Matt
 **Description:** Route `/leaderboard`. Renders top 50 users, their avatar, username, and problems-solved count. Highlights the currently-logged-in user's row if present.
 **Acceptance criteria:**
 - [ ] SSR-rendered (server component)
@@ -420,7 +420,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-033: Problem filters (advanced)
-**Sprint:** 3   **Points:** S   **Depends on:** DD-024   **Area:** FE
+**Sprint:** 3   **Points:** S   **Depends on:** DD-024   **Area:** FE   **Assigned to:** Matt
 **Description:** Enhance problem browser with a combined filter bar: difficulty multi-select + bug_category multi-select + text search on title. Filter state synced to URL.
 **Acceptance criteria:**
 - [ ] Multi-select chips (not dropdowns) for both
@@ -430,7 +430,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-034: UX polish pass
-**Sprint:** 3   **Points:** M   **Depends on:** DD-030   **Area:** FE
+**Sprint:** 3   **Points:** M   **Depends on:** DD-030   **Area:** FE   **Assigned to:** Matt
 **Description:** One-day focused polish. Consistent spacing, dark-mode (follow system preference), loading states on every async action, error toasts for network failures, keyboard shortcut `Cmd+Enter` to submit from the editor.
 **Acceptance criteria:**
 - [ ] Dark-mode works on all pages
@@ -441,7 +441,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-035: Seed final 5 problems (total 15)
-**Sprint:** 3   **Points:** M   **Depends on:** DD-027   **Area:** CONTENT
+**Sprint:** 3   **Points:** M   **Depends on:** DD-027   **Area:** CONTENT   **Assigned to:** Saurish
 **Description:** Add 5 more problems via the seeder CLI. Focus coverage of any bug categories missed in sprint 2. Target final mix: 5 easy / 7 medium / 3 hard.
 **Acceptance criteria:**
 - [ ] All 6 bug categories represented across the full 15-problem set
@@ -451,7 +451,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-036: README, demo script, and recorded demo
-**Sprint:** 3   **Points:** M   **Depends on:** DD-034, DD-035   **Area:** DOC
+**Sprint:** 3   **Points:** M   **Depends on:** DD-034, DD-035   **Area:** DOC   **Assigned to:** Matt
 **Description:** Rewrite root README with: what it is, live URL, architecture diagram, local-dev setup (frontend + backend), deploy instructions. Write a 2-minute demo script (narrated screen capture). Record it.
 **Acceptance criteria:**
 - [ ] README has a GIF or image at the top
@@ -462,7 +462,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-037: Production readiness checklist
-**Sprint:** 3   **Points:** S   **Depends on:** DD-034   **Area:** INFRA
+**Sprint:** 3   **Points:** S   **Depends on:** DD-034   **Area:** INFRA   **Assigned to:** Saurish
 **Description:** Before final demo, verify: all env vars set in Vercel & Railway, CORS configured (only our Vercel domain), no console errors in production build, no secrets in git history (run `trufflehog` or `gitleaks`).
 **Acceptance criteria:**
 - [ ] Secret scanner run, clean
@@ -475,7 +475,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ## Stretch Tickets (any sprint, if time allows)
 
 ### DD-S1: Self-hosted Judge0 on DigitalOcean
-**Sprint:** 3 stretch   **Points:** L   **Depends on:** DD-006   **Area:** INFRA
+**Sprint:** 3 stretch   **Points:** L   **Depends on:** DD-006   **Area:** INFRA   **Assigned to:** Saurish
 **Description:** Provision a $6/month DigitalOcean droplet (2 GB RAM), deploy Judge0 CE via Docker Compose per official install. Configure: network disabled for execution, resource limits matching our constants. Swap `JUDGE0_URL` on Railway to the droplet.
 **Acceptance criteria:**
 - [ ] Droplet not co-located with DB host or backend
@@ -487,7 +487,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-S2: Empirical complexity profiling
-**Sprint:** 3 stretch   **Points:** L   **Depends on:** DD-029   **Area:** AI
+**Sprint:** 3 stretch   **Points:** L   **Depends on:** DD-029   **Area:** AI   **Assigned to:** Arti
 **Description:** For each submission, run user code at `n = [100, 1000, 10000]` (3 runs each, median), fit a curve with `big_O` library, compare against AST-detected tier. Persist empirical tier alongside `complexity_detected`.
 **Acceptance criteria:**
 - [ ] Runs in < 5s total per submission
@@ -497,7 +497,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 ---
 
 ### DD-S3: Error monitoring (Sentry free tier)
-**Sprint:** 3 stretch   **Points:** S   **Depends on:** DD-011   **Area:** INFRA
+**Sprint:** 3 stretch   **Points:** S   **Depends on:** DD-011   **Area:** INFRA   **Assigned to:** Saurish
 **Description:** Sign up for Sentry free. Install `@sentry/nextjs` and `sentry-sdk[fastapi]`. Wire source maps for Next.js. Set up a dead-letter channel in Discord / Slack for alerts.
 **Acceptance criteria:**
 - [ ] Uncaught frontend error shows up in Sentry
