@@ -1,6 +1,6 @@
 # DebugDojo — Ticket Backlog
 
-**Timeline:** 3 sprints × 2 weeks = 6 weeks   **Team:** 4 generalists
+**Timeline:** 3 sprints × 2 weeks = 6 weeks   **Team:** 4 generalists   **Budget:** \$0 (free tiers + local only)
 
 ---
 
@@ -19,18 +19,18 @@
 
 | Sprint | Theme | Ticket count | Focus |
 | ------ | ----- | ------------ | ----- |
-| 1 | Walking skeleton | 12 | Deploy → edit → submit → verdict. Single hardcoded problem, no auth, no AI. |
+| 1 | Walking skeleton | 12 | Local app → edit → submit → verdict. Single hardcoded problem, no auth, no AI. |
 | 2 | Slop pipeline + auth | 15 | Auth, LLM pipeline, 10+ real problems, differential testing, feedback card. |
-| 3 | Judge + polish + demo | 10 | AST complexity, leaderboard, 15 problems, production polish, README. |
-| Stretch | Post-MVP if time allows | 3 | Self-host Judge0, empirical profiling, Sentry. |
+| 3 | Judge + polish + demo | 10 | AST complexity, leaderboard, 15 problems, polish, README. |
+| Stretch | Post-MVP if time allows | 2 | Empirical profiling, Sentry (free tier). |
 
-**Total: ~40 tickets** (including stretch). Capacity: 4 devs × 6 weeks ≈ 48 dev-weeks, so ~1.25 tickets / dev / week after overhead.
+**Total: ~39 tickets** (including stretch). Capacity: 4 devs × 6 weeks ≈ 48 dev-weeks, so ~1.25 tickets / dev / week after overhead. All tooling free-tier or local — no budget required.
 
 ---
 
 ## Sprint 1 — Walking Skeleton (Weeks 1–2)
 
-**Goal:** A deployed URL where any visitor picks the one hardcoded problem, edits Python in Monaco, clicks Submit, and sees "correct" / "incorrect" from a real Judge0 run.
+**Goal:** A locally running app where any visitor picks the one hardcoded problem, edits Python in Monaco, clicks Submit, and sees "correct" / "incorrect" from a real (self-hosted) Judge0 run.
 
 **Sprint 1 dependency graph (high level):**
 
@@ -43,7 +43,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
                                                 │
                  (DD-004, 006, 008) ──► DD-009 (submit endpoint)
                                          ──► DD-010 (submit UI flow)
-                                         ──► DD-011 (deploy both services)
+                                         ──► DD-011 (local dev setup)
                                          ──► DD-012 (E2E smoke test)
 ```
 
@@ -104,15 +104,16 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 
 ---
 
-### DD-006: Judge0 RapidAPI adapter
+### DD-006: Self-hosted Judge0 (Docker) + Python adapter
 **Sprint:** 1   **Points:** M   **Depends on:** DD-005   **Area:** BE   **Assigned to:** Arti
-**Description:** Thin Python wrapper around Judge0 CE via RapidAPI. Expose `async def run_python(code: str, stdin: str) -> RunResult` that submits code, polls for completion, returns stdout/stderr/status.
+**Description:** Add a `docker-compose.yml` at the repo root that runs Judge0 CE locally (Judge0 server + worker + Postgres + Redis, all from the official images). Bind to `127.0.0.1` only. Then write a thin Python wrapper in `backend/judge0/client.py` with `async def run_python(code: str, stdin: str) -> RunResult` that POSTs to the local Judge0, polls for completion, and returns stdout/stderr/status.
 **Acceptance criteria:**
-- [ ] Returns `RunResult(stdout, stderr, status, time_ms)`
-- [ ] Handles RapidAPI 429 with a clear error (not a crash)
+- [ ] `docker compose up judge0` starts Judge0 and `curl http://127.0.0.1:2358/about` returns a JSON response
+- [ ] Judge0 services bind to `127.0.0.1` only (not `0.0.0.0`)
+- [ ] `run_python` returns `RunResult(stdout, stderr, status, time_ms)`
 - [ ] Unit test with a mocked `httpx` client
-- [ ] Env var `JUDGE0_RAPIDAPI_KEY` loaded from `.env`
-**Notes:** Judge0 language_id for Python 3: 71. Signup at rapidapi.com/judge0-official/api/judge0-ce. Free tier: 50 req/day.
+- [ ] `JUDGE0_URL` (default `http://127.0.0.1:2358`) loaded from `.env`; no API key required
+**Notes:** Judge0 language_id for Python 3: 71. Use the `judge0/judge0:1.13.1` image series (pin the exact tag in compose). Set `ENABLE_NETWORK=false` and standard resource limits in the Judge0 config. See https://github.com/judge0/judge0 for INSTALL.md.
 
 ---
 
@@ -166,21 +167,21 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 
 ---
 
-### DD-011: Deploy FE + BE to Vercel + Railway
+### DD-011: One-command local dev setup
 **Sprint:** 1   **Points:** M   **Depends on:** DD-010   **Area:** INFRA   **Assigned to:** Saurish
-**Description:** Deploy frontend to Vercel (connect GitHub, auto-deploys on main). Deploy FastAPI to Railway (Python service, `uvicorn main:app --host 0.0.0.0 --port $PORT`). Wire up environment variables on both.
+**Description:** Make the full stack runnable from a clean clone with minimal ceremony. Create a root `docker-compose.yml` (extends DD-006's Judge0 compose) and a `Makefile` (or `justfile`) with targets: `make install`, `make dev` (starts Judge0 + FastAPI + Next.js), `make stop`. Wire env vars via `.env.example` files for both `frontend/` and `backend/`.
 **Acceptance criteria:**
-- [ ] Vercel URL serves the landing page
-- [ ] Railway URL responds to `/health`
-- [ ] Frontend calls the Railway URL (env var `NEXT_PUBLIC_API_URL`)
-- [ ] Supabase and Judge0 keys set as Railway secrets
-**Notes:** Vercel free tier is sufficient. Railway $5 trial credit covers weeks 1–2; swap to Render free if credit runs out.
+- [ ] Fresh clone → `make install && make dev` → app reachable at `http://localhost:3000`
+- [ ] `.env.example` in both `frontend/` and `backend/` lists every required var (Supabase URL, anon key, service role, Gemini key, `JUDGE0_URL`)
+- [ ] Frontend reads `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`)
+- [ ] README documents the setup in < 10 lines
+**Notes:** No paid hosting. Class demo runs on a laptop. If someone wants a public URL later, Vercel hobby (free) for FE + Fly.io / Render free for BE are both options — not required for MVP.
 
 ---
 
 ### DD-012: End-to-end smoke test & sprint 1 demo
 **Sprint:** 1   **Points:** S   **Depends on:** DD-011   **Area:** INFRA   **Assigned to:** Saurish
-**Description:** Record a 30-second screen capture: open deployed URL → click problem → edit slop → submit → pass. Check into `docs/demos/sprint1.mp4`. Write 5-line smoke-test checklist in README.
+**Description:** Record a 30-second screen capture on a local run: open `http://localhost:3000` → click problem → edit slop → submit → pass. Check into `docs/demos/sprint1.mp4`. Write 5-line smoke-test checklist in README.
 **Acceptance criteria:**
 - [ ] Video checked in (or linked)
 - [ ] Smoke-test checklist in root README
@@ -198,11 +199,11 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 
 ### DD-013: Supabase GitHub OAuth setup
 **Sprint:** 2   **Points:** M   **Depends on:** DD-007   **Area:** AUTH   **Assigned to:** Rayan
-**Description:** Create a GitHub OAuth app, register callback URL with Supabase, enable GitHub provider in Supabase dashboard. Add `profiles` trigger that inserts a row on new user signup copying `user_metadata.user_name` → `github_username`.
+**Description:** Create a GitHub OAuth app (homepage: `http://localhost:3000`, callback: Supabase's hosted `/auth/v1/callback`), enable GitHub provider in Supabase dashboard. Add `profiles` trigger that inserts a row on new user signup copying `user_metadata.user_name` → `github_username`.
 **Acceptance criteria:**
-- [ ] "Sign in with GitHub" works from Supabase auth UI
+- [ ] "Sign in with GitHub" works from the local app at `http://localhost:3000`
 - [ ] On first signup, a row appears in `profiles` with github_username and avatar_url
-- [ ] Redirect URL correctly returns to production URL, not localhost
+- [ ] Supabase "Site URL" set to `http://localhost:3000`; additional redirect URLs include any teammates' local-dev ports if they differ
 
 ---
 
@@ -359,7 +360,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 
 ## Sprint 3 — Judge + Polish + Demo (Weeks 5–6)
 
-**Goal:** Complexity analysis wired into the verdict, leaderboard live, 15 problems published, production polish, demo recorded.
+**Goal:** Complexity analysis wired into the verdict, leaderboard live, 15 problems published, UX polish, demo recorded.
 
 ---
 
@@ -445,7 +446,7 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 **Description:** Add 5 more problems via the seeder CLI. Focus coverage of any bug categories missed in sprint 2. Target final mix: 5 easy / 7 medium / 3 hard.
 **Acceptance criteria:**
 - [ ] All 6 bug categories represented across the full 15-problem set
-- [ ] 15 published problems in production Supabase
+- [ ] 15 published problems in the shared Supabase project
 - [ ] Specs committed to `backend/seeds/problems/`
 
 ---
@@ -461,30 +462,18 @@ DD-001 (repo) ──► DD-002 (CI) ──► DD-003 (FE scaffold) ──► DD-
 
 ---
 
-### DD-037: Production readiness checklist
+### DD-037: Demo readiness checklist
 **Sprint:** 3   **Points:** S   **Depends on:** DD-034   **Area:** INFRA   **Assigned to:** Saurish
-**Description:** Before final demo, verify: all env vars set in Vercel & Railway, CORS configured (only our Vercel domain), no console errors in production build, no secrets in git history (run `trufflehog` or `gitleaks`).
+**Description:** Before final demo, verify: fresh clone runs end-to-end via `make install && make dev`; no console errors in the browser or FastAPI; no secrets in git history (run `trufflehog` or `gitleaks`); every teammate has rehearsed the demo path on their own laptop at least once.
 **Acceptance criteria:**
 - [ ] Secret scanner run, clean
-- [ ] Prod build profile: Lighthouse score ≥ 85 on `/problems`
-- [ ] CORS allows only the Vercel origin
-- [ ] Supabase anon key / service key both rotated once before final demo
+- [ ] Fresh clone on a clean laptop reaches verdict for the Two Sum problem in under 5 minutes of setup
+- [ ] CORS on FastAPI allows only `http://localhost:3000`
+- [ ] Two teammates have done a dry run demo on their own machines
 
 ---
 
 ## Stretch Tickets (any sprint, if time allows)
-
-### DD-S1: Self-hosted Judge0 on DigitalOcean
-**Sprint:** 3 stretch   **Points:** L   **Depends on:** DD-006   **Area:** INFRA   **Assigned to:** Saurish
-**Description:** Provision a $6/month DigitalOcean droplet (2 GB RAM), deploy Judge0 CE via Docker Compose per official install. Configure: network disabled for execution, resource limits matching our constants. Swap `JUDGE0_URL` on Railway to the droplet.
-**Acceptance criteria:**
-- [ ] Droplet not co-located with DB host or backend
-- [ ] Network disabled in Isolate config
-- [ ] Firewall allows only the Railway backend IP range
-- [ ] CVE-2024-29021 mitigation verified
-**Notes:** See https://github.com/judge0/judge0 INSTALL.md. Set `ENABLE_WAIT_RESULT=true`.
-
----
 
 ### DD-S2: Empirical complexity profiling
 **Sprint:** 3 stretch   **Points:** L   **Depends on:** DD-029   **Area:** AI   **Assigned to:** Arti

@@ -17,14 +17,16 @@
 
 ## 2. Goals & Non-Goals
 
+**Budget:** \$0. Everything runs on free tiers or locally. The class demo is presented from a laptop — no production deploy required.
+
 ### In scope (MVP, 6 weeks)
 
-- Deployable web platform with a production URL (not a localhost demo)
+- Locally runnable web platform demoed from a dev laptop (optional free-tier deploy if it helps)
 - LLM pipeline that generates categorized buggy Python code from correct solutions
-- Sandboxed code execution via Judge0 (RapidAPI tier for MVP)
+- Sandboxed code execution via self-hosted Judge0 CE (Docker Compose, local)
 - Differential testing: user's fix compared against a known-correct reference solution
 - AST-based complexity analysis (detect nested loops, redundant work)
-- GitHub OAuth via Supabase
+- GitHub OAuth via Supabase (free tier)
 - Problem browser, Monaco code editor, feedback card, submission history, basic leaderboard
 - 15 LLM-generated problems seeded and human-reviewed before launch
 
@@ -33,7 +35,7 @@
 - **Multi-language submissions** — Python-only for MVP. Adding a second language multiplies AST analyzer, reference-solution format, and Judge0 language IDs. Revisit post-MVP.
 - **Empirical complexity profiling** (`big_O` library, n=100…50k curve fitting) — stretch goal. AST analysis is the MVP signal.
 - **Hints system** — cut entirely.
-- **Self-hosted Judge0** — stretch; we start on Judge0 RapidAPI free tier (50 req/day is enough for dev + demo).
+- **Paid hosting / managed services** — anything with a bill (Railway, DigitalOcean droplets, RapidAPI paid tier, Upstash paid, E2B) is off the table.
 - **Codeforces problem import** — cut. All MVP content is LLM-generated.
 - LeetCode feature parity (contests, forums, company tags, discuss threads).
 - Mobile app, real-time collaboration, paid tier, premium features.
@@ -72,7 +74,6 @@
 | Submission history | User's past submissions, sorted by recency | P1 | 2 |
 | Leaderboard | Simple global ranking by # problems solved | P1 | 3 |
 | Empirical complexity profiling | Run at n=[100, 1k, 10k], fit curve | P2 (stretch) | 3 |
-| Self-hosted Judge0 | Move off RapidAPI to own DigitalOcean droplet | P2 (stretch) | 3 |
 
 ---
 
@@ -130,18 +131,17 @@ If capacity allows: run user's code at `n = [100, 1000, 10000]`, measure wall ti
 
 ### Summary
 
-| Layer | Choice | Version |
-| ----- | ------ | ------- |
+| Layer | Choice | Version / Tier |
+| ----- | ------ | -------------- |
 | Frontend framework | Next.js App Router + TypeScript | Next.js 16 |
 | Code editor | `@monaco-editor/react` (dynamic import) | latest |
 | UI styling | Tailwind CSS + shadcn/ui | latest |
 | Backend | FastAPI (Python 3.12) | 0.128 |
-| Database + Auth | Supabase (Postgres + GitHub OAuth) | SSR client |
-| Code sandbox | Judge0 CE via RapidAPI (MVP) → self-host (stretch) | CE |
-| LLM | Google Gemini 2.5 Flash (free tier) | 2.5-flash |
-| Cache (optional) | Upstash Redis | serverless |
-| Hosting (FE) | Vercel | hobby tier |
-| Hosting (BE) | Railway | free tier |
+| Database + Auth | Supabase (Postgres + GitHub OAuth) | free tier, SSR client |
+| Code sandbox | Judge0 CE, self-hosted via Docker Compose (local) | CE, free |
+| LLM | Google Gemini 2.5 Flash | free tier (1500 req/day) |
+| Hosting (FE) | Local `pnpm dev` for class demo; Vercel hobby (free) optional | local / free |
+| Hosting (BE) | Local `uvicorn` | local, free |
 
 ### Alternatives considered
 
@@ -153,11 +153,13 @@ If capacity allows: run user's code at `n = [100, 1000, 10000]`, measure wall ti
 
 **Supabase vs. Neon+Clerk vs. Firebase.** Supabase bundles Postgres, Auth, and row-level security in one free-tier dashboard. Neon+Clerk requires integrating two products. Firebase is NoSQL, which is a poor fit for our relational data (problems ↔ test_cases ↔ submissions ↔ users). Supabase's SSR client (`/supabase/ssr`) has first-class Next.js App Router support.
 
-**Judge0 vs. Piston vs. E2B.** Piston's public API became non-commercial / auth-only on Feb 15, 2026, so it's effectively out. E2B is excellent but paid. Judge0 CE is the battle-tested choice — the CVE-2024-29021 sandbox-escape is real but mitigated by (a) running on an isolated VM, (b) disabling network access, (c) never co-locating with the database. RapidAPI hosts it for free up to 50 requests/day, which is sufficient for development and a demo; self-hosting is a sprint 3 stretch if we need volume.
+**Judge0 vs. Piston vs. E2B.** Piston's public API became non-commercial / auth-only on Feb 15, 2026, so it's effectively out. E2B is excellent but paid. Judge0 CE is the battle-tested choice. RapidAPI's free tier caps at 50 req/day — too tight for iterative dev and a live demo. Instead we **self-host Judge0 CE via Docker Compose on each dev laptop** from day one: it's free, unlimited, and isolates execution in the same `isolate` sandbox as the hosted tier. Because execution stays on the dev's machine (not exposed to the internet), the CVE-2024-29021 concerns are reduced to local-machine hygiene; we still disable network in the Isolate config and bind Judge0 to `127.0.0.1` only.
 
-**Gemini 2.5 Flash vs. Groq Llama 3.3 vs. Cerebras.** Gemini's free tier offers 1500 req/day and a 1M-token context, both meaningfully larger than Groq's 1000/day and Cerebras's ~1700/day. For slop generation — which is a *batch offline* workload, not latency-sensitive — throughput-per-day matters more than tokens-per-second. Gemini also scores higher on code-generation benchmarks. If feedback-card latency becomes a UX issue later, we can add Groq as a secondary provider for that hot path.
+**Gemini 2.5 Flash vs. Groq Llama 3.3 vs. Cerebras.** Gemini's free tier offers 1500 req/day and a 1M-token context, both meaningfully larger than Groq's 1000/day and Cerebras's ~1700/day. For slop generation — which is a *batch offline* workload, not latency-sensitive — throughput-per-day matters more than tokens-per-second. Gemini also scores higher on code-generation benchmarks. If feedback-card latency becomes a UX issue later, we can add Groq as a secondary free provider for that hot path.
 
-**Upstash Redis vs. in-memory vs. none.** Deferred — add only if the leaderboard query is slow or we need rate limiting. For MVP, Postgres indexes are enough.
+**Hosting.** No paid hosting in MVP. The class demo runs from a dev laptop: `pnpm dev` for the frontend, `uvicorn` for the backend, Judge0 in Docker, and Supabase free tier in the cloud for auth/DB (no local Postgres needed). If we want a shareable URL after the demo, both Vercel (frontend) and Fly.io / Render free tiers (backend) are options — not required.
+
+**Caching.** Deferred. Postgres indexes are enough for MVP leaderboard; no Redis.
 
 ---
 
@@ -260,10 +262,10 @@ Managed by Supabase Auth (`auth.users`). We only add a public `profiles` view fo
 ### Security
 
 - **Sandbox:** Judge0 runs every execution in an `isolate` sandbox — own PID/network namespace, disabled network, 2s CPU limit, 256 MB RAM limit
-- **Isolation:** Judge0 host VM is separate from backend and DB hosts
+- **Isolation:** Judge0 Docker container is bound to `127.0.0.1` and reachable only from the local FastAPI process; not exposed to the LAN
 - **Auth:** Supabase JWT verified on every FastAPI request via `supabase-py`; user id comes from the JWT, never from the request body
 - **RLS:** enforced at Postgres layer even if backend code is wrong
-- **API keys:** Gemini and Judge0 keys live only in Railway environment variables; never in client bundle
+- **API keys:** Gemini key lives in a git-ignored `.env` file; never in client bundle. No Judge0 key needed when self-hosted.
 
 ---
 
@@ -295,11 +297,11 @@ Stored in `backend/prompts/` as versioned `.txt` files so diffs are traceable in
 
 | Concern | Mitigation |
 | ------- | ---------- |
-| Judge0 sandbox escape (CVE-2024-29021) | Run on isolated VM; network disabled; Judge0 never co-located with DB or backend; API key rotation monthly |
+| Judge0 sandbox escape (CVE-2024-29021) | Judge0 runs in Docker on `127.0.0.1` only; network disabled inside Isolate; demo machine only — not co-located with anything sensitive |
 | Prompt injection in user-submitted code affecting LLM feedback card | Feedback card is generated from submission metadata only (bug category, test results), NOT from user code content |
 | Supabase RLS misconfig leaking other users' submissions | Integration test per sprint that verifies user A cannot read user B's submission row |
-| API key leakage | All keys in Railway / Vercel env vars; git pre-commit hook scans for `GEMINI_` and `JUDGE0_` patterns |
-| Rate-limit abuse | Per-user limit (10 submissions / minute) enforced at FastAPI layer via simple in-memory sliding window; upgrade to Upstash if abused |
+| API key leakage | Gemini key in git-ignored `.env`; git pre-commit hook scans for `GEMINI_` patterns; Supabase service-role key in `.env` only |
+| Rate-limit abuse | Per-user limit (10 submissions / minute) enforced at FastAPI layer via in-memory sliding window |
 | Denial of service via infinite loops | Judge0's 2s CPU limit + 256 MB memory limit catches these automatically |
 
 ---
@@ -308,9 +310,9 @@ Stored in `backend/prompts/` as versioned `.txt` files so diffs are traceable in
 
 | Sprint | Theme | End-of-sprint demo |
 | ------ | ----- | ------------------ |
-| **1** | Walking skeleton | Logged-out user opens a deployed URL, picks one hardcoded problem, edits Python in Monaco, submits → sees "correct" / "incorrect" from Judge0. No AI, no auth. |
+| **1** | Walking skeleton | Logged-out user opens the locally running app, picks one hardcoded problem, edits Python in Monaco, submits → sees "correct" / "incorrect" from the local Judge0. No AI, no auth. |
 | **2** | Slop pipeline + auth | Logged-in user browses 10+ LLM-generated problems, picks one, sees slop pre-loaded in editor, fixes it, sees differential-test verdict + LLM feedback card. Submission history works. |
-| **3** | Judge + polish + demo | AST complexity analyzer integrated; verdict shows pass/partial/fail with complexity detail; leaderboard live; 15+ problems seeded; production deploy; README + demo script complete. Stretch: self-hosted Judge0, empirical profiling. |
+| **3** | Judge + polish + demo | AST complexity analyzer integrated; verdict shows pass/partial/fail with complexity detail; leaderboard live; 15+ problems seeded; local demo runs cleanly from a clean clone; README + demo script complete. Stretch: empirical profiling. |
 
 ---
 
@@ -320,7 +322,8 @@ Stored in `backend/prompts/` as versioned `.txt` files so diffs are traceable in
 | ---- | ------ | ---------- |
 | Team unfamiliar with Next.js App Router | Sprint 1 slips | Pair-programming first week; Sprint 1 deliverable is deliberately small (walking skeleton) |
 | LLM-generated slop is too obvious or too subtle | Problems feel boring | Manual review gate on first 15 problems; iterate on prompts in sprint 2 |
-| Judge0 RapidAPI 50/day cap hit during demo | Demo breaks | Have self-host as sprint 3 stretch; cache verdicts per (code, problem) hash so retries don't re-bill |
+| Local Judge0 Docker won't start on a teammate's machine | Dev blocked | Pin Judge0 version in `docker-compose.yml`; document known-good Docker Desktop versions; fallback to RapidAPI free tier (50/day) for that dev only |
+| Demo laptop fails during class | Demo breaks | Everything runs locally, so we can demo from any team member's laptop; record a backup screen capture during sprint 3 |
 | AST analyzer has false positives on correct code | User frustration | For MVP, complexity only affects `pass` vs `partial` — never downgrades to `fail`. Safer to under-report than over-report |
 | Supabase free tier limits (500 MB DB, 50K monthly active users) | Unlikely to hit in class | Acknowledge; would need paid tier only if project lives beyond class |
 | Gemini free tier quota exhaustion | Slop gen blocked | Slop generation is offline/batch, not user-triggered; 1500 req/day is ~10× what we need for 15 problems |
@@ -333,7 +336,7 @@ Stored in `backend/prompts/` as versioned `.txt` files so diffs are traceable in
 1. **Which 15 problems?** Target mix: 5 easy / 7 medium / 3 hard. Need a problem-selection lead on the team. Suggested domains: arrays, strings, hash maps, recursion, trees. (No graph/DP in MVP — too many edge cases to slop-ify cleanly.)
 2. **Who owns the Gemini prompts?** Recommend one team member as "slop lead" for sprint 2 to keep prompt style consistent.
 3. **Branch strategy?** Trunk-based with short-lived feature branches vs. GitFlow. Recommend trunk-based given team size.
-4. **CI provider?** GitHub Actions (free for public repo) — recommended. Lint + typecheck on PR; no deploy-on-merge for MVP (manual deploys to Vercel/Railway).
+4. **CI provider?** GitHub Actions (free for public repo) — recommended. Lint + typecheck on PR only; no deploy step (demo is local).
 5. **Demo script ownership?** Assign in sprint 2 retro, draft by end of sprint 3 week 1.
 
 ---
