@@ -1,10 +1,7 @@
 # Frontend
 
-The frontend will contain the Debug Dojo Next.js App Router
-application.
-
-DD-001 creates the monorepo location and conventions. The
-executable Next.js scaffold will be added by DD-003.
+Debug Dojo's frontend is a Next.js App Router application with
+TypeScript, Tailwind CSS, and shadcn/ui.
 
 ## Local Development
 
@@ -16,5 +13,11 @@ pnpm install
 pnpm dev
 ```
 
-The local app should run at <http://localhost:3000> once the
-Next.js scaffold is in place.
+The local app runs at <http://localhost:3000>.
+
+## Checks
+
+```sh
+pnpm lint
+pnpm typecheck
+```

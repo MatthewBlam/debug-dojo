@@ -10,6 +10,7 @@ node_modules/
 .next/
 dist/
 build/
+*.tsbuildinfo
 
 # Python
 __pycache__/
