@@ -1,23 +1,24 @@
 # Backend
 
-The backend will contain the Debug Dojo FastAPI service for
-submissions, Judge0 integration, Supabase access, and Python
-code analysis.
-
-DD-001 creates the monorepo location and conventions. The
-executable FastAPI scaffold will be added by DD-005.
+The backend contains the Debug Dojo FastAPI service for submissions,
+Judge0 integration, Supabase access, and Python code analysis.
 
 ## Local Development
 
-Use the Python version from the root `.python-version`.
+Use the Python version from the root `.python-version` (3.12).
 
 ```sh
 cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+uv sync
+uv run uvicorn main:app --reload
 ```
 
-The local API should run at <http://localhost:8000> once the
-FastAPI scaffold is in place.
+The local API runs at <http://localhost:8000>.
+
+## Quality Checks
+
+```sh
+cd backend
+uv run ruff check .
+uv run mypy .
+```
