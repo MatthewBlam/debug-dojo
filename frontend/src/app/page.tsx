@@ -1,4 +1,16 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+
+async function signInWithGitHub() {
+  await supabase.auth.signInWithOAuth({
+    provider: "github",
+    options: {
+      redirectTo: "http://localhost:3000",
+    },
+  });
+}
 
 export default function Home() {
   return (
@@ -28,6 +40,9 @@ export default function Home() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button>Start a session</Button>
               <Button variant="outline">Browse drills</Button>
+              <Button variant="outline" onClick={signInWithGitHub}>
+                Sign in with GitHub
+              </Button>
             </div>
           </div>
 
