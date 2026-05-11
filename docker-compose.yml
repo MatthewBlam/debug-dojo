@@ -1,6 +1,8 @@
 services:
   judge0:
     image: judge0/judge0:1.13.1
+    env_file:
+      - ./judge0.conf
     depends_on:
       - judge0-worker
       - postgres
@@ -15,6 +17,8 @@ services:
   judge0-worker:
     image: judge0/judge0:1.13.1
     command: ["./scripts/workers"]
+    env_file:
+      - ./judge0.conf
     depends_on:
       - postgres
       - redis
@@ -36,7 +40,8 @@ services:
     command:
       - bash
       - -c
-      - docker-entrypoint.sh --appendonly no --requirepass "$$REDIS_PASSWORD"
+      - docker-entrypoint.sh --appendonly no --requirepass
+        "$$REDIS_PASSWORD"
     env_file:
       - ./judge0.conf
     restart: unless-stopped

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+from typing import cast
 
-from backend.judge0.client import RunResult, run_python
+import httpx
+
+from judge0.client import RunResult, run_python
 
 
 class MockResponse:
@@ -46,13 +49,15 @@ class MockAsyncClient:
 
     async def get(self, url: str, *, params: dict[str, str]) -> MockResponse:
         self.get_calls.append((url, params))
-        return MockResponse(self._poll_responses.pop(0))
+        payload = self._poll_responses.pop(0)
+        assert isinstance(payload, dict)
+        return MockResponse(payload)
 
 
 def test_run_python_polls_until_completion() -> None:
     client = MockAsyncClient()
 
-    result = asyncio.run(run_python("print(input())", "3", client=client))
+    result = asyncio.run(run_python("print(input())", "3", client=cast(httpx.AsyncClient, client)))
 
     assert result == RunResult(
         stdout="3\n",
