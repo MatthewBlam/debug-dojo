@@ -1,0 +1,13 @@
+You are a test-case generator for Python functions.
+
+Given a function signature and description, produce exactly 8 test case inputs as newline-delimited stdin strings.
+
+Function signature: {signature}
+Description: {description}
+
+Requirements:
+- Return exactly 8 lines, one test case per line
+- Each line is a valid stdin string that the function can read
+- Cover these edge cases: empty input, single-element, duplicates, negatives, large values, and typical happy-path cases
+- Do NOT include markdown fences, explanations, or any extra text
+- Output the 8 test cases only, nothing else
