@@ -50,7 +50,9 @@ async def _run_python_with_client(
     )
     submission_response.raise_for_status()
 
-    submission_token = submission_response.json()["token"]
+    submission_token = submission_response.json().get("token")
+    if not submission_token:
+        raise ValueError("Judge0 response missing submission token")
 
     while True:
         result_response = await client.get(
