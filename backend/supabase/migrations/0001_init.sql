@@ -48,7 +48,7 @@ create table public.submissions (
   user_id uuid not null references auth.users(id) on delete cascade,
   problem_id uuid not null references public.problems(id) on delete cascade,
   code text not null,
-  verdict verdict not null,
+  verdict verdict not null default 'fail',
   complexity_detected text,
   cases_passed int not null default 0 check (cases_passed >= 0),
   cases_total int not null default 0 check (cases_total >= 0),
@@ -122,7 +122,14 @@ using (auth.uid() = user_id);
 create policy "Users can create own submissions"
 on public.submissions
 for insert
-with check (auth.uid() = user_id);
+with check (
+  auth.uid() = user_id
+  and verdict = 'fail'
+  and cases_passed = 0
+  and cases_total = 0
+  and feedback_card is null
+  and complexity_detected is null
+);
 
 -- Submissions: service role can manage all
 create policy "Service role can manage submissions"
