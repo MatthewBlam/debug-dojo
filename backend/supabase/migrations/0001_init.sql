@@ -38,6 +38,7 @@ create table public.test_cases (
   id uuid primary key default gen_random_uuid(),
   problem_id uuid not null references public.problems(id) on delete cascade,
   input text not null,
+  expected_output text not null,
   is_hidden boolean not null default false
 );
 
