@@ -7,8 +7,6 @@ services:
       - judge0-worker
       - postgres
       - redis
-    volumes:
-      - ./judge0.conf:/judge0.conf:ro
     ports:
       - "127.0.0.1:2358:2358"
     privileged: true
@@ -22,8 +20,6 @@ services:
     depends_on:
       - postgres
       - redis
-    volumes:
-      - ./judge0.conf:/judge0.conf:ro
     privileged: true
     restart: unless-stopped
 

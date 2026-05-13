@@ -60,7 +60,7 @@ async def submit_code(payload: SubmissionRequest) -> SubmissionResponse:
 
     try:
         result = await run_python(wrapper_code, stdin)
-    except (httpx.HTTPError, KeyError, ValueError) as exc:
+    except (httpx.HTTPError, ValueError) as exc:
         raise HTTPException(status_code=502, detail="Judge0 execution failed") from exc
     if result.status == "Internal Error":
         raise HTTPException(status_code=502, detail="Judge0 execution failed")
