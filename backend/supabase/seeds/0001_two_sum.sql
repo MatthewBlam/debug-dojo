@@ -57,25 +57,30 @@ $reference_solution$,
 insert into public.test_cases (
   problem_id,
   input,
+  expected_output,
   is_hidden
 )
 select
   inserted_problem.id,
   test_case.input,
+  test_case.expected_output,
   test_case.is_hidden
 from inserted_problem
 cross join (
   values
     (
-      '{"nums":[2,7,11,15],"target":9,"expected":[0,1]}',
+      '{"nums":[2,7,11,15],"target":9}',
+      '[0,1]',
       false
     ),
     (
-      '{"nums":[3,3],"target":6,"expected":[0,1]}',
+      '{"nums":[3,3],"target":6}',
+      '[0,1]',
       false
     ),
     (
-      '{"nums":[],"target":0,"expected":[]}',
+      '{"nums":[],"target":0}',
+      '[]',
       false
     )
-) as test_case(input, is_hidden);
+) as test_case(input, expected_output, is_hidden);
