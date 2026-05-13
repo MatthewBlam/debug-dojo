@@ -2,11 +2,11 @@
 create extension if not exists pgcrypto;
 
 -- Enums
-create type difficulty_level as enum ('easy', 'medium', 'hard');
+create type difficulty as enum ('easy', 'medium', 'hard');
 
-create type problem_status as enum ('draft', 'reviewed', 'published');
+create type status as enum ('draft', 'reviewed', 'published');
 
-create type submission_verdict as enum ('pass', 'partial', 'fail');
+create type verdict as enum ('pass', 'partial', 'fail');
 
 -- Replace these 6 values with your actual “slop types” if different
 create type bug_category as enum (
@@ -23,13 +23,13 @@ create table public.problems (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   description text not null,
-  difficulty difficulty_level not null,
+  difficulty difficulty not null,
   bug_category bug_category not null,
   target_complexity text not null,
   slop_code text not null,
   reference_solution text not null,
   function_signature text not null,
-  status problem_status not null default 'draft',
+  status status not null default 'draft',
   created_at timestamptz not null default now()
 );
 
@@ -48,7 +48,7 @@ create table public.submissions (
   user_id uuid not null references auth.users(id) on delete cascade,
   problem_id uuid not null references public.problems(id) on delete cascade,
   code text not null,
-  verdict submission_verdict not null,
+  verdict verdict not null,
   complexity_detected text,
   cases_passed int not null default 0 check (cases_passed >= 0),
   cases_total int not null default 0 check (cases_total >= 0),
