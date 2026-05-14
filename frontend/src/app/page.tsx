@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { T } from "@/lib/tokens";
 import { BrandMark } from "@/components/BrandMark";
+import { StartPracticingButton } from "@/components/landing/AuthAwareButtons";
 
 export const metadata = {
   title: "Debug Dojo — Practice the judgment CS classes don't teach",
@@ -102,7 +103,7 @@ function LandingNav() {
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Link
-              href="/problems"
+              href="/login"
               style={{
                 color: T.textDim,
                 fontSize: 13.5,
@@ -111,7 +112,36 @@ function LandingNav() {
             >
               Sign in
             </Link>
-            <PrimaryButton href="/practice">Start practicing</PrimaryButton>
+            <Link
+              href="/login"
+              className="dd-btn-primary"
+              style={{
+                background: T.gold,
+                color: T.bg,
+                padding: "9px 16px",
+                fontSize: 13,
+                fontWeight: 600,
+                borderRadius: 10,
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                boxShadow: "0 8px 24px -8px rgba(212,168,87,0.55)",
+                transition:
+                  "transform 120ms ease, box-shadow 120ms ease, background 120ms ease",
+              }}
+            >
+              Start practicing
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                <path
+                  d="M3 7h8M8 3l3 4-3 4"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
           </div>
         </div>
       </Container>
@@ -221,9 +251,9 @@ function Hero() {
             </p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-              <PrimaryButton href="/practice" size="lg">
+              <StartPracticingButton size="lg">
                 Start practicing — it&apos;s free
-              </PrimaryButton>
+              </StartPracticingButton>
               <GhostButton href="#how" size="lg">
                 See how it works
               </GhostButton>
@@ -1383,9 +1413,9 @@ function FinalCta() {
               One drill takes a few minutes. The judgment compounds for years.
             </p>
             <div style={{ display: "inline-flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-              <PrimaryButton href="/practice" size="lg">
+              <StartPracticingButton size="lg">
                 Start practicing — free
-              </PrimaryButton>
+              </StartPracticingButton>
               <GhostButton href="/problems" size="lg">
                 Browse drills
               </GhostButton>
@@ -1526,44 +1556,6 @@ function SectionLead({ children }: { children: ReactNode }) {
     >
       {children}
     </p>
-  );
-}
-
-function PrimaryButton({
-  children,
-  href,
-  size = "md",
-}: {
-  children: ReactNode;
-  href: string;
-  size?: "md" | "lg";
-}) {
-  const padding = size === "lg" ? "13px 22px" : "9px 16px";
-  const fontSize = size === "lg" ? 14 : 13;
-  return (
-    <Link
-      href={href}
-      className="dd-btn-primary"
-      style={{
-        background: T.gold,
-        color: T.bg,
-        padding,
-        fontSize,
-        fontWeight: 600,
-        borderRadius: 10,
-        textDecoration: "none",
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 8,
-        boxShadow: "0 8px 24px -8px rgba(212,168,87,0.55)",
-        transition: "transform 120ms ease, box-shadow 120ms ease, background 120ms ease",
-      }}
-    >
-      {children}
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-        <path d="M3 7h8M8 3l3 4-3 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </Link>
   );
 }
 
