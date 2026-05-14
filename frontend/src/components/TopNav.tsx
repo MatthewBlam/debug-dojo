@@ -8,7 +8,7 @@ import { BrandMark } from "./BrandMark";
 type NavKey = "Problems" | "Progress" | "Profile";
 
 const NAV: { label: NavKey; href: string }[] = [
-  { label: "Problems", href: "/" },
+  { label: "Problems", href: "/problems" },
   { label: "Progress", href: "/progress" },
   { label: "Profile", href: "/profile" },
 ];
@@ -23,12 +23,13 @@ export function TopNav({
   initials?: string;
 }) {
   const pathname = usePathname();
-  const active: NavKey =
-    pathname?.startsWith("/progress")
-      ? "Progress"
-      : pathname?.startsWith("/profile")
-        ? "Profile"
-        : "Problems";
+  const active: NavKey | null = pathname?.startsWith("/progress")
+    ? "Progress"
+    : pathname?.startsWith("/profile")
+      ? "Profile"
+      : pathname?.startsWith("/problems") || pathname?.startsWith("/practice")
+        ? "Problems"
+        : null;
 
   return (
     <div
