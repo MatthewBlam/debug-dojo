@@ -44,29 +44,35 @@ export default function DashboardPage() {
   useEffect(() => {
     let active = true;
     void (async () => {
-      const { data, error: queryError } = await supabase
-        .from("problems")
-        .select("id,title,difficulty,bug_category,status,created_at")
-        .order("created_at", { ascending: true });
+      try {
+        const { data, error: queryError } = await supabase
+          .from("problems")
+          .select("id,title,difficulty,bug_category,status,created_at")
+          .order("created_at", { ascending: true });
 
-      if (!active) return;
+        if (!active) return;
 
-      if (queryError) {
+        if (queryError) {
+          setError("Could not load problems.");
+          setRows([]);
+          return;
+        }
+
+        const list = (data ?? []) as ProblemRow[];
+        setRows(
+          list.map((p, i) => ({
+            id: p.id,
+            short: shortId(p.id, i),
+            title: p.title,
+            difficulty: toDifficultyLevel(p.difficulty),
+            tags: [bugCategoryToTag(p.bug_category)].filter(Boolean),
+          })),
+        );
+      } catch {
+        if (!active) return;
         setError("Could not load problems.");
         setRows([]);
-        return;
       }
-
-      const list = (data ?? []) as ProblemRow[];
-      setRows(
-        list.map((p, i) => ({
-          id: p.id,
-          short: shortId(p.id, i),
-          title: p.title,
-          difficulty: toDifficultyLevel(p.difficulty),
-          tags: [bugCategoryToTag(p.bug_category)].filter(Boolean),
-        })),
-      );
     })();
     return () => {
       active = false;
@@ -215,6 +221,7 @@ export default function DashboardPage() {
               <path d="M9.5 9.5L12 12" stroke={T.textMute} strokeWidth="1.4" strokeLinecap="round" />
             </svg>
             <input
+              aria-label="Search problems"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search problems"

@@ -5,12 +5,11 @@ import { usePathname } from "next/navigation";
 import { T } from "@/lib/tokens";
 import { BrandMark } from "./BrandMark";
 
-type NavKey = "Problems" | "Progress" | "Profile";
+type NavKey = "Problems" | "Progress";
 
 const NAV: { label: NavKey; href: string }[] = [
   { label: "Problems", href: "/" },
   { label: "Progress", href: "/progress" },
-  { label: "Profile", href: "/profile" },
 ];
 
 export function TopNav({
@@ -26,9 +25,7 @@ export function TopNav({
   const active: NavKey =
     pathname?.startsWith("/progress")
       ? "Progress"
-      : pathname?.startsWith("/profile")
-        ? "Profile"
-        : "Problems";
+      : "Problems";
 
   return (
     <div

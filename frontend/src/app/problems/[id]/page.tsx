@@ -68,44 +68,52 @@ export default function ProblemPage({
   useEffect(() => {
     let isMounted = true;
     void (async () => {
-      setIsLoading(true);
-      setError(null);
-      setSubmitResult(null);
+      try {
+        setIsLoading(true);
+        setError(null);
+        setSubmitResult(null);
 
-      const resolvedParams = await params;
-      if (!isMounted) return;
-      setProblemId(resolvedParams.id);
+        const resolvedParams = await params;
+        if (!isMounted) return;
+        setProblemId(resolvedParams.id);
 
-      const { data, error: queryError } = await supabase
-        .from("problems")
-        .select("id,title,description,slop_code,difficulty,bug_category,target_complexity")
-        .eq("id", resolvedParams.id)
-        .single<ProblemRecord>();
+        const { data, error: queryError } = await supabase
+          .from("problems")
+          .select("id,title,description,slop_code,difficulty,bug_category,target_complexity")
+          .eq("id", resolvedParams.id)
+          .single<ProblemRecord>();
 
-      if (!isMounted) return;
+        if (!isMounted) return;
+        if (queryError || !data) throw queryError ?? new Error("Problem not found");
 
-      if (queryError || !data) {
-        setError("Could not load this problem.");
-        setProblem(null);
-        setCode("");
-      } else {
         setProblem(data);
         setCode(data.slop_code ?? "");
         setOriginalCode(data.slop_code ?? "");
+        setElapsed(0);
+      } catch {
+        if (!isMounted) return;
+        setError("Could not load this problem.");
+        setProblem(null);
+        setCode("");
+        setOriginalCode("");
+        setElapsed(0);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-      setIsLoading(false);
     })();
     return () => {
       isMounted = false;
     };
   }, [params]);
 
+  const currentProblemId = problem?.id;
+
   // simple session timer
   useEffect(() => {
-    if (isLoading || !problem) return;
+    if (isLoading || !currentProblemId) return;
     const id = window.setInterval(() => setElapsed((t) => t + 1), 1000);
     return () => window.clearInterval(id);
-  }, [isLoading, problem]);
+  }, [isLoading, currentProblemId]);
 
   const apiBaseUrl = useMemo(
     () => process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000",
@@ -119,18 +127,27 @@ export default function ProblemPage({
     setError(null);
     setConsoleTab("console");
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+
     try {
       const response = await fetch(`${apiBaseUrl}/api/v1/submissions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ problem_id: problemId, code }),
+        signal: controller.signal,
       });
       if (!response.ok) throw new Error("Submit failed");
       const data = (await response.json()) as SubmitResult;
       setSubmitResult(data);
-    } catch {
-      setError("Failed to submit code. Please try again.");
+    } catch (submitError) {
+      const message =
+        submitError instanceof DOMException && submitError.name === "AbortError"
+          ? "Submission timed out. Please try again."
+          : "Failed to submit code. Please try again.";
+      setError(message);
     } finally {
+      window.clearTimeout(timeoutId);
       setIsSubmitting(false);
     }
   };
