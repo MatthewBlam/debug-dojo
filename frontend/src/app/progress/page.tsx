@@ -48,6 +48,7 @@ const BUG_TYPES = [
 export default function ProgressPage() {
   const [counts, setCounts] = useState<DiffCounts>({ easy: 0, medium: 0, hard: 0 });
   const [totalProblems, setTotalProblems] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -69,11 +70,13 @@ export default function ProgressPage() {
         }
         setCounts(c);
         setTotalProblems(rows.length);
-      } catch (error) {
-        console.error("Could not load progress data.", error);
+        setError(null);
+      } catch (loadError) {
+        console.error("Could not load progress data.", loadError);
         if (!active) return;
         setCounts({ easy: 0, medium: 0, hard: 0 });
         setTotalProblems(0);
+        setError("Could not load progress data.");
       }
     })();
     return () => {
@@ -99,6 +102,23 @@ export default function ProgressPage() {
       <TopNav />
 
       <div style={{ flex: 1, padding: "32px clamp(20px, 4vw, 48px)", maxWidth: 1440, width: "100%", margin: "0 auto" }}>
+        {error ? (
+          <div
+            role="alert"
+            style={{
+              marginBottom: 18,
+              padding: "12px 14px",
+              background: "rgba(229,115,115,0.12)",
+              border: `1px solid ${T.red}`,
+              borderRadius: 8,
+              color: T.text,
+              fontSize: 13,
+            }}
+          >
+            {error}
+          </div>
+        ) : null}
+
         {/* Identity + tiles */}
         <div
           style={{
