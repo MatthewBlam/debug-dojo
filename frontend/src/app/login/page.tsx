@@ -23,7 +23,9 @@ function LoginInner() {
   const params = useSearchParams();
   const rawRedirect = params.get("redirect");
   const redirectTo =
-    rawRedirect && rawRedirect.startsWith("/") ? rawRedirect : "/problems";
+    rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/problems";
 
   const { user, isLoading: authLoading } = useUser();
 

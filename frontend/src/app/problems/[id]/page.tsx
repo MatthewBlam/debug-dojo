@@ -26,24 +26,22 @@ export default function ProblemPage({
   useEffect(() => {
     let active = true;
     void (async () => {
-      setIsLoading(true);
-      setError(null);
+      try {
+        setIsLoading(true);
+        setError(null);
 
-      const resolved = await params;
-      if (!active) return;
+        const resolved = await params;
+        if (!active) return;
 
-      const { data, error: queryError } = await supabase
-        .from("problems")
-        .select("id,title,description,slop_code,difficulty,bug_category,target_complexity")
-        .eq("id", resolved.id)
-        .single<ProblemRecord>();
+        const { data, error: queryError } = await supabase
+          .from("problems")
+          .select("id,title,description,slop_code,difficulty,bug_category,target_complexity")
+          .eq("id", resolved.id)
+          .single<ProblemRecord>();
 
-      if (!active) return;
+        if (!active) return;
+        if (queryError || !data) throw queryError ?? new Error("Problem not found");
 
-      if (queryError || !data) {
-        setError("Could not load this problem.");
-        setProblem(null);
-      } else {
         const tags = [
           data.bug_category ? data.bug_category.replace(/_/g, " ") : null,
           data.target_complexity ? `complexity: ${data.target_complexity}` : null,
@@ -60,8 +58,13 @@ export default function ProblemPage({
           prompt:
             "The starter code compiles but produces wrong results. Find and fix the defect without changing the function signature.",
         });
+      } catch {
+        if (!active) return;
+        setError("Could not load this problem.");
+        setProblem(null);
+      } finally {
+        if (active) setIsLoading(false);
       }
-      setIsLoading(false);
     })();
     return () => {
       active = false;

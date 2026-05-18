@@ -32,6 +32,7 @@ export type WorkspaceProblem = {
 export type SubmitResult = {
   verdict: "pass" | "fail";
   stdout: string;
+  testCaseResults?: { ok?: boolean; passed?: boolean }[];
 };
 
 type Tab = "description" | "hints" | "discussion" | "solutions";
@@ -56,7 +57,7 @@ export function Workspace({
   problem,
   isLoading = false,
   loadError = null,
-  backHref = "/",
+  backHref = "/problems",
   backLabel = "Problems",
 }: {
   problem: WorkspaceProblem | null;
@@ -101,22 +102,29 @@ export function Workspace({
     setRunError(null);
     setConsoleTab(kind === "run" ? "console" : "tests");
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+
     try {
       const response = await fetch(`${apiBaseUrl}/api/v1/submissions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ problem_id: problem.id, code }),
+        signal: controller.signal,
       });
       if (!response.ok) throw new Error(`Backend returned ${response.status}`);
       const data = (await response.json()) as SubmitResult;
       setResult(data);
     } catch (e) {
       setRunError(
-        e instanceof Error
+        e instanceof DOMException && e.name === "AbortError"
+          ? "The runner timed out. Please try again."
+          : e instanceof Error
           ? `Could not reach the runner: ${e.message}`
           : "Could not reach the runner.",
       );
     } finally {
+      window.clearTimeout(timeoutId);
       setIsBusy(false);
     }
   };
@@ -642,10 +650,24 @@ function TestsView({
     );
   }
   const verdict = result?.verdict;
+  const perTestResults = result?.testCaseResults;
+  const hasPerTestResults = Array.isArray(perTestResults);
+  const hasOnlyOverallVerdict = Boolean(result) && !hasPerTestResults;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {hasOnlyOverallVerdict ? (
+        <div style={{ color: T.textMute, fontFamily: T.sans, fontSize: 12, marginBottom: 4 }}>
+          Per-test results are unavailable; examples show expected behavior only.
+        </div>
+      ) : null}
       {problem.testCases.map((tc, i) => {
-        const ok = verdict === "pass";
+        const perTest = perTestResults?.[i];
+        const ok = hasPerTestResults
+          ? (perTest?.ok ?? perTest?.passed ?? null)
+          : verdict === "pass"
+            ? true
+            : null;
         return (
           <div
             key={i}
@@ -658,7 +680,7 @@ function TestsView({
             }}
           >
             <span>
-              {verdict == null ? (
+              {ok === null ? (
                 <span
                   style={{
                     width: 7,
@@ -678,7 +700,7 @@ function TestsView({
                     strokeLinejoin="round"
                   />
                 </svg>
-              ) : (
+              ) : ok === false ? (
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
                   <path
                     d="M3.5 3.5l7 7M10.5 3.5l-7 7"
@@ -687,6 +709,16 @@ function TestsView({
                     strokeLinecap="round"
                   />
                 </svg>
+              ) : (
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: T.textFaint,
+                    display: "inline-block",
+                  }}
+                />
               )}
             </span>
             <span style={{ color: T.text }}>{tc.input}</span>

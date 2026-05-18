@@ -48,24 +48,36 @@ const BUG_TYPES = [
 export default function ProgressPage() {
   const [counts, setCounts] = useState<DiffCounts>({ easy: 0, medium: 0, hard: 0 });
   const [totalProblems, setTotalProblems] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     void (async () => {
-      const { data } = await supabase
-        .from("problems")
-        .select("difficulty");
-      if (!active) return;
-      const rows = (data ?? []) as { difficulty: string | null }[];
-      const c: DiffCounts = { easy: 0, medium: 0, hard: 0 };
-      for (const r of rows) {
-        const k = (r.difficulty ?? "").toLowerCase();
-        if (k === "easy") c.easy++;
-        else if (k === "medium") c.medium++;
-        else if (k === "hard") c.hard++;
+      try {
+        const { data, error: queryError } = await supabase
+          .from("problems")
+          .select("difficulty");
+        if (!active) return;
+        if (queryError) throw queryError;
+
+        const rows = (data ?? []) as { difficulty: string | null }[];
+        const c: DiffCounts = { easy: 0, medium: 0, hard: 0 };
+        for (const r of rows) {
+          const k = (r.difficulty ?? "").toLowerCase();
+          if (k === "easy") c.easy++;
+          else if (k === "medium") c.medium++;
+          else if (k === "hard") c.hard++;
+        }
+        setCounts(c);
+        setTotalProblems(rows.length);
+        setError(null);
+      } catch (loadError) {
+        console.error("Could not load progress data.", loadError);
+        if (!active) return;
+        setCounts({ easy: 0, medium: 0, hard: 0 });
+        setTotalProblems(0);
+        setError("Could not load progress data.");
       }
-      setCounts(c);
-      setTotalProblems(rows.length);
     })();
     return () => {
       active = false;
@@ -90,6 +102,23 @@ export default function ProgressPage() {
       <TopNav />
 
       <div style={{ flex: 1, padding: "32px clamp(20px, 4vw, 48px)", maxWidth: 1440, width: "100%", margin: "0 auto" }}>
+        {error ? (
+          <div
+            role="alert"
+            style={{
+              marginBottom: 18,
+              padding: "12px 14px",
+              background: "rgba(229,115,115,0.12)",
+              border: `1px solid ${T.red}`,
+              borderRadius: 8,
+              color: T.text,
+              fontSize: 13,
+            }}
+          >
+            {error}
+          </div>
+        ) : null}
+
         {/* Identity + tiles */}
         <div
           style={{

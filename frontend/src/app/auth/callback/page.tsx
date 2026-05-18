@@ -21,7 +21,9 @@ function CallbackInner() {
   useEffect(() => {
     const rawRedirect = params.get("redirect");
     const redirectTo =
-      rawRedirect && rawRedirect.startsWith("/") ? rawRedirect : "/problems";
+      rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+        ? rawRedirect
+        : "/problems";
 
     void (async () => {
       try {

@@ -89,7 +89,7 @@ export function StartPracticingButton({
   size?: "md" | "lg";
 }) {
   const { user, isLoading } = useUser();
-  const href = isLoading || user ? APP_ENTRY : loginHref(APP_ENTRY);
+  const href = user ? APP_ENTRY : loginHref(APP_ENTRY);
 
   const padding = size === "lg" ? "13px 22px" : "9px 16px";
   const fontSize = size === "lg" ? 14 : 13;
