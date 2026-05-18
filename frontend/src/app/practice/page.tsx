@@ -17,5 +17,5 @@ const PROBLEM: WorkspaceProblem = {
 };
 
 export default function PracticePage() {
-  return <Workspace problem={PROBLEM} backHref="/" backLabel="Problems" />;
+  return <Workspace problem={PROBLEM} backHref="/problems" backLabel="Problems" />;
 }

@@ -27,7 +27,7 @@ export function Difficulty({ level }: { level: DifficultyLevel }) {
 }
 
 export function toDifficultyLevel(raw: string | null | undefined): DifficultyLevel {
-  const v = (raw ?? "").toLowerCase();
+  const v = (raw ?? "").trim().toLowerCase();
   if (v === "hard") return "Hard";
   if (v === "medium") return "Medium";
   return "Easy";

@@ -271,6 +271,7 @@ export default function DashboardPage() {
               />
             </svg>
             <input
+              aria-label="Search problems"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search problems"
@@ -306,6 +307,7 @@ export default function DashboardPage() {
 
           <div style={{ position: "relative" }}>
             <select
+              aria-label="Filter by difficulty"
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as DifficultyFilter)}
               style={{

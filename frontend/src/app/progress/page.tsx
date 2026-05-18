@@ -52,20 +52,29 @@ export default function ProgressPage() {
   useEffect(() => {
     let active = true;
     void (async () => {
-      const { data } = await supabase
-        .from("problems")
-        .select("difficulty");
-      if (!active) return;
-      const rows = (data ?? []) as { difficulty: string | null }[];
-      const c: DiffCounts = { easy: 0, medium: 0, hard: 0 };
-      for (const r of rows) {
-        const k = (r.difficulty ?? "").toLowerCase();
-        if (k === "easy") c.easy++;
-        else if (k === "medium") c.medium++;
-        else if (k === "hard") c.hard++;
+      try {
+        const { data, error: queryError } = await supabase
+          .from("problems")
+          .select("difficulty");
+        if (!active) return;
+        if (queryError) throw queryError;
+
+        const rows = (data ?? []) as { difficulty: string | null }[];
+        const c: DiffCounts = { easy: 0, medium: 0, hard: 0 };
+        for (const r of rows) {
+          const k = (r.difficulty ?? "").toLowerCase();
+          if (k === "easy") c.easy++;
+          else if (k === "medium") c.medium++;
+          else if (k === "hard") c.hard++;
+        }
+        setCounts(c);
+        setTotalProblems(rows.length);
+      } catch (error) {
+        console.error("Could not load progress data.", error);
+        if (!active) return;
+        setCounts({ easy: 0, medium: 0, hard: 0 });
+        setTotalProblems(0);
       }
-      setCounts(c);
-      setTotalProblems(rows.length);
     })();
     return () => {
       active = false;

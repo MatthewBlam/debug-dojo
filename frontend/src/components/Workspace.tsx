@@ -56,7 +56,7 @@ export function Workspace({
   problem,
   isLoading = false,
   loadError = null,
-  backHref = "/",
+  backHref = "/problems",
   backLabel = "Problems",
 }: {
   problem: WorkspaceProblem | null;
@@ -101,22 +101,29 @@ export function Workspace({
     setRunError(null);
     setConsoleTab(kind === "run" ? "console" : "tests");
 
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+
     try {
       const response = await fetch(`${apiBaseUrl}/api/v1/submissions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ problem_id: problem.id, code }),
+        signal: controller.signal,
       });
       if (!response.ok) throw new Error(`Backend returned ${response.status}`);
       const data = (await response.json()) as SubmitResult;
       setResult(data);
     } catch (e) {
       setRunError(
-        e instanceof Error
-          ? `Could not reach the runner: ${e.message}`
-          : "Could not reach the runner.",
+        e instanceof DOMException && e.name === "AbortError"
+          ? "The runner timed out. Please try again."
+          : e instanceof Error
+            ? `Could not reach the runner: ${e.message}`
+            : "Could not reach the runner.",
       );
     } finally {
+      window.clearTimeout(timeoutId);
       setIsBusy(false);
     }
   };
