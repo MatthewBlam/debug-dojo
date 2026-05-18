@@ -120,8 +120,8 @@ export function Workspace({
         e instanceof DOMException && e.name === "AbortError"
           ? "The runner timed out. Please try again."
           : e instanceof Error
-          ? `Could not reach the runner: ${e.message}`
-          : "Could not reach the runner.",
+            ? `Could not reach the runner: ${e.message}`
+            : "Could not reach the runner.",
       );
     } finally {
       window.clearTimeout(timeoutId);
