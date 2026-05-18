@@ -74,6 +74,8 @@ export default function ProgressPage() {
       } catch (loadError) {
         console.error("Could not load progress data.", loadError);
         if (!active) return;
+        setCounts({ easy: 0, medium: 0, hard: 0 });
+        setTotalProblems(0);
         setError("Could not load progress data.");
       }
     })();
