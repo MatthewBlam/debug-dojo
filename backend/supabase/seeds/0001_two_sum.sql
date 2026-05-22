@@ -1,9 +1,12 @@
 -- Sprint 1 seed: Two Sum slop problem
 
-delete from public.problems where title = 'Two Sum';
+delete from public.problems
+where id = '2da798cf-79a9-4741-8382-f96dff10efce'
+   or title = 'Two Sum';
 
 with inserted_problem as (
   insert into public.problems (
+    id,
     title,
     description,
     difficulty,
@@ -15,6 +18,7 @@ with inserted_problem as (
     status
   )
   values (
+    '2da798cf-79a9-4741-8382-f96dff10efce',
     'Two Sum',
     $description$
 Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
