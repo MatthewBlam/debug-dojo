@@ -51,7 +51,7 @@ export function TopNav({
           textDecoration: "none",
         }}
       >
-        <BrandMark size={22} />
+        <BrandMark size={36} />
         <span
           style={{
             fontSize: 15,
