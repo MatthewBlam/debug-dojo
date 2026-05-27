@@ -75,6 +75,6 @@ judge0-down: check-docker
 stop: judge0-down
 
 test:
-	cd backend && python3 -m pytest
+	cd backend && uv run pytest
 	cd frontend && corepack pnpm lint
 	cd frontend && corepack pnpm typecheck
