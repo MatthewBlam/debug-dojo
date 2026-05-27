@@ -148,7 +148,7 @@ function LoginInner() {
             textDecoration: "none",
           }}
         >
-          <BrandMark size={20} />
+          <BrandMark size={32} />
           <span style={{ fontSize: 14, fontWeight: 600 }}>Debug Dojo</span>
         </Link>
         <Link
