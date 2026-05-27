@@ -72,7 +72,7 @@ function LandingNav() {
               color: T.text,
             }}
           >
-            <BrandMark size={22} />
+            <BrandMark size={36} />
             <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: -0.1 }}>
               Debug Dojo
             </span>
@@ -1445,7 +1445,7 @@ function Footer() {
           }}
         >
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-            <BrandMark size={18} />
+            <BrandMark size={28} />
             <span style={{ color: T.text, fontWeight: 500 }}>Debug Dojo</span>
             <span>· Practice the judgment CS classes don&apos;t teach.</span>
           </div>
