@@ -4,7 +4,7 @@ description: >
   of the two numbers that add up to target. Assumes exactly one solution
   exists and each input may be used only once.
 difficulty: easy
-bug_category: complexity_degradation
+bug_category: bad_complexity
 target_complexity: "O(n)"
 function_signature: "def two_sum(nums: list[int], target: int) -> list[int]:"
 reference_solution: |
@@ -16,3 +16,4 @@ reference_solution: |
               return [seen[complement], i]
           seen[num] = i
       return []
+      
