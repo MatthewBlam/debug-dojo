@@ -1,0 +1,18 @@
+title: "Two Sum"
+description: >
+  Given an array of integers nums and an integer target, return the indices
+  of the two numbers that add up to target. Assumes exactly one solution
+  exists and each input may be used only once.
+difficulty: easy
+bug_category: complexity_degradation
+target_complexity: "O(n)"
+function_signature: "def two_sum(nums: list[int], target: int) -> list[int]:"
+reference_solution: |
+  def two_sum(nums: list[int], target: int) -> list[int]:
+      seen: dict[int, int] = {}
+      for i, num in enumerate(nums):
+          complement = target - num
+          if complement in seen:
+              return [seen[complement], i]
+          seen[num] = i
+      return []
