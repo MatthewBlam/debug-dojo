@@ -9,8 +9,31 @@ but flawed Python function. The user reads the prompt, fixes the function in a M
 visible tests for fast feedback, and submits against hidden tests for a final verdict. The backend
 judges both correctness and estimated time complexity.
 
+## Quick Start
+
+```sh
+git clone https://github.com/MatthewBlam/debug-dojo.git
+cd debug-dojo
+make install
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+# Fill in Supabase and Gemini API keys (see Environment Variables below)
+make dev
+```
+
+This starts Judge0 (Docker required), FastAPI on `http://127.0.0.1:8000`, and Next.js on `http://localhost:3000`.
+
+To run without Judge0 (no code execution):
+
+```sh
+make dev-no-judge0
+```
+
+See [Prerequisites](#prerequisites) and [Environment Variables](#environment-variables) for full details.
+
 ## Table of Contents
 
+- [Quick Start](#quick-start)
 - [What It Does](#what-it-does)
 - [Feature Set](#feature-set)
 - [Tech Stack](#tech-stack)
