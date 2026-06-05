@@ -15,6 +15,7 @@ export type PracticeProblem = {
   prompt: string;
   starterCode: string;
   testCases: { input: string; expected: string }[];
+  targetComplexity?: string | null;
 };
 
 export const PRACTICE_PROBLEM: PracticeProblem = {
@@ -28,7 +29,7 @@ export const PRACTICE_PROBLEM: PracticeProblem = {
   expected: [
     { call: "two_sum([2,7,11,15], 9)", result: "[0, 1]" },
     { call: "two_sum([3,3], 6)", result: "[0, 1]" },
-    { call: "two_sum([], 0)", result: "[]" },
+    { call: "two_sum([], 0)", result: "[]" }
   ],
   prompt:
     "The starter solution is correct but O(n²). Rewrite it to run in O(n) using a single pass with a hash map.",
@@ -43,6 +44,7 @@ export const PRACTICE_PROBLEM: PracticeProblem = {
   testCases: [
     { input: "[2, 7, 11, 15], target=9", expected: "[0, 1]" },
     { input: "[3, 3], target=6", expected: "[0, 1]" },
-    { input: "[], target=0", expected: "[]" },
+    { input: "[], target=0", expected: "[]" }
   ],
+  targetComplexity: "O(n)"
 };

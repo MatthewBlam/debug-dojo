@@ -14,6 +14,7 @@ const PROBLEM: WorkspaceProblem = {
   prompt: PRACTICE_PROBLEM.prompt,
   expectedExamples: PRACTICE_PROBLEM.expected,
   testCases: PRACTICE_PROBLEM.testCases,
+  targetComplexity: PRACTICE_PROBLEM.targetComplexity
 };
 
 export default function PracticePage() {

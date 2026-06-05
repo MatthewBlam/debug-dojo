@@ -49,26 +49,8 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Debug Dojo palette — deep ink + cream + gold. Single source of truth. */
 :root {
   color-scheme: dark;
-
-  --dd-bg: #0d1117;
-  --dd-panel: #161b22;
-  --dd-panel2: #1b2129;
-  --dd-panel3: #21262d;
-  --dd-editor: #0a0e14;
-  --dd-console: #0e1218;
-  --dd-line: #21262d;
-  --dd-line-soft: #1a1f26;
-  --dd-line-strong: #2f3640;
-  --dd-text: #e6e1d6;
-  --dd-text-dim: #a8a499;
-  --dd-text-mute: #6e7681;
-  --dd-text-faint: #4a525d;
-  --dd-gold: #d4a857;
-  --dd-sage: #7c9f6a;
-  --dd-red: #c25b56;
 
   --background: #0d1117;
   --foreground: #e6e1d6;
@@ -109,9 +91,14 @@
     @apply border-border outline-ring/50;
   }
   body {
-    background: var(--dd-bg);
-    color: var(--dd-text);
-    font-family: var(--font-geist-sans), Geist, Manrope, -apple-system, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family:
+      var(--font-geist-sans),
+      Geist,
+      Manrope,
+      -apple-system,
+      sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {

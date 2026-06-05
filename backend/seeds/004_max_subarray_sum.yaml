@@ -1,0 +1,19 @@
+title: "Maximum Subarray"
+description: |
+  Given an integer array `nums`, find the subarray with the largest sum and
+  return its sum. A subarray is a contiguous non-empty sequence of elements
+  within an array.
+difficulty: "Easy"
+tags: ["arrays", "dynamic programming"]
+function_signature: "def max_subarray(nums: list[int]) -> int"
+reference_solution: |
+  def max_subarray(nums):
+      max_sum = nums[0]
+      current_sum = nums[0]
+      for i in range(1, len(nums)):
+          current_sum = max(nums[i], current_sum + nums[i])
+          max_sum = max(max_sum, current_sum)
+      return max_sum
+target_complexity: "O(n)"
+bug_category: "bad-variable"
+num_test_cases: 8

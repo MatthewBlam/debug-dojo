@@ -1,0 +1,23 @@
+title: "Merge Intervals"
+description: |
+  Given an array of `intervals` where `intervals[i] = [start_i, end_i]`, merge
+  all overlapping intervals and return a list of the non-overlapping intervals
+  that cover all the intervals in the input.
+difficulty: "Medium"
+tags: ["arrays", "sorting"]
+function_signature: "def merge_intervals(intervals: list[list[int]]) -> list[list[int]]"
+reference_solution: |
+  def merge_intervals(intervals):
+      if not intervals:
+          return []
+      intervals.sort(key=lambda x: x[0])
+      merged = [intervals[0]]
+      for start, end in intervals[1:]:
+          if start <= merged[-1][1]:
+              merged[-1][1] = max(merged[-1][1], end)
+          else:
+              merged.append([start, end])
+      return merged
+target_complexity: "O(n log n)"
+bug_category: "wrong-operator"
+num_test_cases: 8

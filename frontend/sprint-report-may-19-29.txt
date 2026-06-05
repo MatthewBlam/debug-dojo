@@ -1,0 +1,67 @@
+Sprint Report — May 19–29, 2026
+
+1. Tasks Completed (Last Sprint)
+
+PRs Merged:
+- PR #99 — Fix CI: regenerate pnpm lockfile (merged May 22)
+  - Regenerated pnpm-lock.yaml with missing dependencies that were breaking CI
+  - Estimate: 1h / Actual: 0.5h
+- PR #100 — Catch up and closed issue setup gaps (merged May 27)
+  - Fixed Makefile, caught up on issue tracking, closed setup-related gaps
+  - Estimate: 1.5h / Actual: 1.5h
+
+Code Reviews Performed:
+- PR #93 — Rework frontend to new Debug Dojo design (by artiomcovali)
+- PR #95 — SaaS-style landing page + /practice demo (by artiomcovali)
+- PR #97 — Sign-in page with email + GitHub OAuth (by artiomcovali)
+- PR #103 — Added logo (by artiomcovali)
+- Estimate for reviews: 1.5h / Actual: ~1.5h
+
+Other Work:
+- Investigated Judge0 Docker compatibility issue (see Impediments)
+- Coordinated Supabase project consolidation with team
+- Estimate: 1h / Actual: ~1h
+
+2. Impediments (Project-wise)
+
+- Judge0 does not work on macOS Docker — Our code execution engine, Judge0, only runs reliably in Docker on Linux. The team spent significant time trying to get it working locally on macOS without understanding why it was failing. After I investigated, I discovered this is a known limitation — Judge0's Docker setup relies on Linux-specific features (cgroups, isolate sandboxing) that don't translate through Docker Desktop's macOS VM layer. This blocked local backend testing for anyone on a Mac and delayed our ability to validate the submission pipeline end-to-end.
+
+3. Team Issues
+
+- Positive: Overall team communication has been good. We've maintained a steady cadence of PRs and reviews, and collaboration on the frontend has been smooth.
+- Negative/Challenge: Splitting up work across the team was sometimes difficult. A concrete example: two different team members independently set up separate Supabase projects — one for the problems/submissions tables and another for authentication. We had to reconcile and consolidate these into a single Supabase project, which took extra coordination effort. Going forward, we've aligned on using one shared project.
+
+4. Tasks Assigned for Next Sprint (May 29 – June 9)
+
+Issue   Title                                           Estimate
+#55     [DD-014] Next.js auth middleware + Supabase SSR  2h
+#65     [DD-024] Problem browser page                    2h
+#67     [DD-026] Submission history page                 2h
+#71     [DD-030] Verdict UI with complexity breakdown    2h
+#73     [DD-032] Leaderboard page                        1.5h
+#74     [DD-033] Problem filters (advanced)              1.5h
+#75     [DD-034] UX polish pass                          2h
+#77     [DD-036] README, demo script, and recorded demo  2h
+
+---
+
+Suggested Hours to Log on GitHub Project Board
+
+Completed issues (estimate + actual):
+
+Issue                               Estimate  Actual
+#44 (DD-003) Next.js scaffold       1.5h      2h
+#45 (DD-004) Monaco editor          1.5h      1.5h
+#51 (DD-010) Problem page w/ editor 2h        2.5h
+
+Open/upcoming issues (estimates only):
+
+Issue                                        Estimate
+#55 (DD-014) Auth middleware + Supabase SSR   2h
+#65 (DD-024) Problem browser page            2h
+#67 (DD-026) Submission history page         2h
+#71 (DD-030) Verdict UI w/ complexity        2h
+#73 (DD-032) Leaderboard page               1.5h
+#74 (DD-033) Problem filters                1.5h
+#75 (DD-034) UX polish pass                 2h
+#77 (DD-036) README + demo                  2h

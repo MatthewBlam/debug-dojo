@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -10,6 +11,7 @@ from .config import get_judge0_url
 
 PYTHON_3_LANGUAGE_ID = 71
 _POLL_INTERVAL_SECONDS = 0.2
+_POLL_TIMEOUT_SECONDS = 30.0
 _TERMINAL_STATUS_IDS = {3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
 
 
@@ -54,6 +56,7 @@ async def _run_python_with_client(
     if not submission_token:
         raise ValueError("Judge0 response missing submission token")
 
+    deadline = time.monotonic() + _POLL_TIMEOUT_SECONDS
     while True:
         result_response = await client.get(
             f"/submissions/{submission_token}",
@@ -74,6 +77,12 @@ async def _run_python_with_client(
                 stderr=_extract_stderr(payload),
                 status=status.get("description") or "Unknown",
                 time_ms=_parse_time_ms(payload.get("time")),
+            )
+
+        if time.monotonic() >= deadline:
+            raise TimeoutError(
+                f"Judge0 submission {submission_token} did not complete "
+                f"within {_POLL_TIMEOUT_SECONDS}s"
             )
 
         await asyncio.sleep(_POLL_INTERVAL_SECONDS)

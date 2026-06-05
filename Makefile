@@ -11,6 +11,7 @@ install:
 		backend/.venv/bin/python -m pip install --upgrade pip && \
 		backend/.venv/bin/python -m pip install -r backend/requirements.txt; \
 	fi
+	git config core.hooksPath .githooks
 
 dev:
 	$(MAKE) judge0-up

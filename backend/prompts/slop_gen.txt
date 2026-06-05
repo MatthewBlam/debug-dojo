@@ -1,0 +1,27 @@
+You are a code instructor creating practice exercises. Given a correct Python solution, introduce exactly ONE bug from the specified category to create a "sloppy" version that a student must debug.
+
+CORRECT SOLUTION:
+```python
+{reference_solution}
+```
+
+FUNCTION SIGNATURE: {function_signature}
+BUG CATEGORY: {bug_category}
+DIFFICULTY: {difficulty}
+
+BUG CATEGORIES:
+- off-by-one: Introduce an off-by-one error (wrong range bound, < vs <=, index ±1)
+- wrong-operator: Use wrong comparison/arithmetic operator (+/-, *//, and/or, ==/!=)
+- bad-variable: Use wrong variable name, swap two variables, or reference stale value
+- missing-edge-case: Remove or break handling of an edge case (empty input, zero, negative)
+- logic-inversion: Invert a boolean condition or swap if/else branches
+- bad-complexity: Keep correctness but degrade to a worse time complexity (e.g., add unnecessary nested loop, remove memoization, use linear search instead of hash lookup)
+
+RULES:
+- Output ONLY the buggy Python function, no explanation
+- The bug must be subtle enough to require thought but not impossible to find
+- For "bad-complexity": the code must still produce correct output but be slower
+- For all other categories: the code must produce WRONG output on at least one input
+- Keep the function signature exactly the same
+- Do not add comments hinting at the bug
+- Do not change the coding style dramatically

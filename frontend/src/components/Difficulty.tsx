@@ -3,7 +3,7 @@ import { T, type DifficultyLevel } from "@/lib/tokens";
 const colorMap: Record<DifficultyLevel, string> = {
   Easy: T.sage,
   Medium: T.gold,
-  Hard: T.red,
+  Hard: T.red
 };
 
 export function Difficulty({ level }: { level: DifficultyLevel }) {
@@ -17,9 +17,8 @@ export function Difficulty({ level }: { level: DifficultyLevel }) {
         color: c,
         fontSize: 12,
         fontWeight: 500,
-        fontFamily: T.sans,
-      }}
-    >
+        fontFamily: T.sans
+      }}>
       <span style={{ width: 6, height: 6, borderRadius: 1, background: c }} />
       {level}
     </span>

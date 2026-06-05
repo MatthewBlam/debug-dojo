@@ -24,7 +24,7 @@ export function AppNavButton() {
           height: 16,
           borderRadius: 4,
           background: T.panel2,
-          opacity: 0.6,
+          opacity: 0.6
         }}
       />
     );
@@ -40,9 +40,8 @@ export function AppNavButton() {
           textDecoration: "none",
           display: "inline-flex",
           alignItems: "center",
-          gap: 8,
-        }}
-      >
+          gap: 8
+        }}>
         <span
           aria-hidden
           style={{
@@ -55,9 +54,8 @@ export function AppNavButton() {
             fontWeight: 700,
             display: "inline-flex",
             alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+            justifyContent: "center"
+          }}>
           {initialsFor(user.email)}
         </span>
         Dashboard
@@ -71,9 +69,8 @@ export function AppNavButton() {
       style={{
         color: T.textDim,
         fontSize: 13.5,
-        textDecoration: "none",
-      }}
-    >
+        textDecoration: "none"
+      }}>
       Sign in
     </Link>
   );
@@ -83,7 +80,7 @@ export function AppNavButton() {
 // through /login (with redirect=…); logged-in users land directly in the app.
 export function StartPracticingButton({
   children,
-  size = "md",
+  size = "md"
 }: {
   children: ReactNode;
   size?: "md" | "lg";
@@ -112,9 +109,8 @@ export function StartPracticingButton({
         gap: 8,
         boxShadow: "0 8px 24px -8px rgba(212,168,87,0.55)",
         transition: "transform 120ms ease, box-shadow 120ms ease, background 120ms ease",
-        opacity: isLoading ? 0.85 : 1,
-      }}
-    >
+        opacity: isLoading ? 0.85 : 1
+      }}>
       {children}
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
         <path

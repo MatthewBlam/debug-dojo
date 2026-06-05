@@ -28,15 +28,13 @@ function CallbackInner() {
     void (async () => {
       try {
         // Provider returned an explicit error in the query/hash.
-        const providerError =
-          params.get("error_description") || params.get("error");
+        const providerError = params.get("error_description") || params.get("error");
         if (providerError) throw new Error(providerError);
 
         const code = params.get("code");
         if (code) {
           // PKCE flow — exchange the one-time code for a session.
-          const { error: exchangeError } =
-            await supabase.auth.exchangeCodeForSession(code);
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
         } else {
           // Implicit flow — supabase-js parses #access_token=… on init when
@@ -46,9 +44,7 @@ function CallbackInner() {
 
         router.replace(redirectTo);
       } catch (e) {
-        setError(
-          e instanceof Error ? e.message : "Could not complete sign-in.",
-        );
+        setError(e instanceof Error ? e.message : "Could not complete sign-in.");
       }
     })();
   }, [params, router]);
@@ -63,9 +59,8 @@ function CallbackInner() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 24,
-      }}
-    >
+        padding: 24
+      }}>
       <div style={{ textAlign: "center", maxWidth: 360 }}>
         {error ? (
           <>
@@ -76,9 +71,8 @@ function CallbackInner() {
                 textTransform: "uppercase",
                 color: T.red,
                 fontFamily: T.mono,
-                marginBottom: 10,
-              }}
-            >
+                marginBottom: 10
+              }}>
               Sign-in error
             </div>
             <div style={{ fontSize: 14, color: T.text, lineHeight: 1.5, marginBottom: 18 }}>
@@ -89,9 +83,8 @@ function CallbackInner() {
               style={{
                 color: T.gold,
                 fontSize: 13,
-                textDecoration: "underline",
-              }}
-            >
+                textDecoration: "underline"
+              }}>
               Try again
             </a>
           </>
@@ -105,7 +98,7 @@ function CallbackInner() {
                 border: `2px solid ${T.line}`,
                 borderTopColor: T.gold,
                 margin: "0 auto 16px",
-                animation: "dd-spin 0.9s linear infinite",
+                animation: "dd-spin 0.9s linear infinite"
               }}
             />
             <div style={{ fontSize: 13, color: T.textDim }}>Finishing sign-in…</div>

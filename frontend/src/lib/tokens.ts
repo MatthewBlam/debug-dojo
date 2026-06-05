@@ -38,12 +38,12 @@ export const T = {
     self: "#c25b56",
     var: "#e6e1d6",
     cls: "#7da9c9",
-    dec: "#c89858",
+    dec: "#c89858"
   },
 
   sans: '"Geist", "Manrope", -apple-system, sans-serif',
   mono: '"JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace',
-  serif: '"Instrument Serif", "Cormorant Garamond", Georgia, serif',
+  serif: '"Instrument Serif", "Cormorant Garamond", Georgia, serif'
 } as const;
 
 export type DifficultyLevel = "Easy" | "Medium" | "Hard";

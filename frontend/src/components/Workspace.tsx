@@ -3,47 +3,37 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
 import type { EditorProps } from "@monaco-editor/react";
 
 import { T } from "@/lib/tokens";
+import { supabase } from "@/lib/supabase";
 import { TopNav } from "@/components/TopNav";
-import { Tag } from "@/components/Tag";
 import { Difficulty, toDifficultyLevel } from "@/components/Difficulty";
 import type { DifficultyLevel } from "@/lib/tokens";
 
+import { ConsoleView } from "@/components/workspace/ConsoleView";
+import { TestsView } from "@/components/workspace/TestsView";
+import { DiagnosticsView } from "@/components/workspace/DiagnosticsView";
+import { DescriptionTab } from "@/components/workspace/DescriptionTab";
+import { HintsTab } from "@/components/workspace/HintsTab";
+import { EmptyState } from "@/components/workspace/EmptyState";
+
+export type { WorkspaceProblem, SubmitResult } from "@/components/workspace/types";
+
+import type { WorkspaceProblem, SubmitResult, ResultKind } from "@/components/workspace/types";
+
 const MonacoEditor = dynamic<EditorProps>(() => import("@monaco-editor/react"), {
-  ssr: false,
+  ssr: false
 });
-
-export type WorkspaceProblem = {
-  id: string;
-  shortId?: string;
-  title: string;
-  difficulty: DifficultyLevel | string | null;
-  description: string;
-  starterCode: string;
-  tags?: string[];
-  prompt?: string;
-  expectedExamples?: { call: string; result: string }[];
-  testCases?: { input: string; expected: string }[];
-};
-
-export type SubmitResult = {
-  verdict: "pass" | "fail";
-  stdout: string;
-  testCaseResults?: { ok?: boolean; passed?: boolean }[];
-};
 
 type Tab = "description" | "hints" | "discussion" | "solutions";
 type ConsoleTab = "console" | "tests" | "diagnostics";
-type ResultKind = "run" | "submit";
 
 const TABS: { key: Tab; label: string; badge?: string; locked?: boolean }[] = [
   { key: "description", label: "Description" },
   { key: "hints", label: "Hints", badge: "3" },
   { key: "discussion", label: "Discussion", badge: "128" },
-  { key: "solutions", label: "Solutions", locked: true },
+  { key: "solutions", label: "Solutions", locked: true }
 ];
 
 function formatElapsed(seconds: number): string {
@@ -58,7 +48,7 @@ export function Workspace({
   isLoading = false,
   loadError = null,
   backHref = "/problems",
-  backLabel = "Problems",
+  backLabel = "Problems"
 }: {
   problem: WorkspaceProblem | null;
   isLoading?: boolean;
@@ -91,7 +81,7 @@ export function Workspace({
 
   const apiBaseUrl = useMemo(
     () => process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000",
-    [],
+    []
   );
 
   const callBackend = async (kind: ResultKind) => {
@@ -103,14 +93,24 @@ export function Workspace({
     setConsoleTab(kind === "run" ? "console" : "tests");
 
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+    const timeoutId = window.setTimeout(() => controller.abort(), 300000);
+
+    let authHeaders: Record<string, string> = {};
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) {
+        authHeaders = { Authorization: `Bearer ${data.session.access_token}` };
+      }
+    } catch {
+      // No auth — continue without token
+    }
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/v1/submissions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ problem_id: problem.id, code }),
-        signal: controller.signal,
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ problem_id: problem.id, code, mode: kind }),
+        signal: controller.signal
       });
       if (!response.ok) throw new Error(`Backend returned ${response.status}`);
       const data = (await response.json()) as SubmitResult;
@@ -121,13 +121,25 @@ export function Workspace({
           ? "The runner timed out. Please try again."
           : e instanceof Error
             ? `Could not reach the runner: ${e.message}`
-            : "Could not reach the runner.",
+            : "Could not reach the runner."
       );
     } finally {
       window.clearTimeout(timeoutId);
       setIsBusy(false);
     }
   };
+
+  // Cmd+Enter / Ctrl+Enter → submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && !isBusy && problem) {
+        e.preventDefault();
+        callBackend("submit");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
 
   const handleReset = () => {
     setCode(originalCode);
@@ -137,7 +149,7 @@ export function Workspace({
   };
 
   const difficulty: DifficultyLevel = toDifficultyLevel(
-    typeof problem?.difficulty === "string" ? problem.difficulty : problem?.difficulty ?? null,
+    typeof problem?.difficulty === "string" ? problem.difficulty : (problem?.difficulty ?? null)
   );
   const isDirty = code !== originalCode;
   const disabled = isBusy || isLoading || !problem;
@@ -150,9 +162,8 @@ export function Workspace({
         height: "100dvh",
         background: T.bg,
         color: T.text,
-        fontFamily: T.sans,
-      }}
-    >
+        fontFamily: T.sans
+      }}>
       <TopNav />
 
       {/* Sub-header */}
@@ -166,9 +177,8 @@ export function Workspace({
           padding: "8px 24px",
           gap: 16,
           flexWrap: "wrap",
-          flexShrink: 0,
-        }}
-      >
+          flexShrink: 0
+        }}>
         <div
           style={{
             display: "flex",
@@ -176,9 +186,8 @@ export function Workspace({
             gap: 8,
             color: T.textDim,
             fontSize: 13,
-            minWidth: 0,
-          }}
-        >
+            minWidth: 0
+          }}>
           <Link href={backHref} style={{ color: T.textMute, textDecoration: "none" }}>
             {backLabel}
           </Link>
@@ -194,9 +203,8 @@ export function Workspace({
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              maxWidth: 360,
-            }}
-          >
+              maxWidth: 360
+            }}>
             {problem?.title ?? (isLoading ? "Loading…" : "Problem")}
           </span>
         </div>
@@ -211,9 +219,8 @@ export function Workspace({
             gap: 12,
             color: T.textDim,
             fontSize: 12,
-            flexWrap: "wrap",
-          }}
-        >
+            flexWrap: "wrap"
+          }}>
           <span style={{ fontFamily: T.mono }}>{formatElapsed(elapsed)}</span>
           <span style={{ width: 1, height: 14, background: T.line }} />
           <button
@@ -233,9 +240,8 @@ export function Workspace({
               alignItems: "center",
               gap: 6,
               opacity: disabled || !isDirty ? 0.5 : 1,
-              cursor: disabled || !isDirty ? "not-allowed" : "pointer",
-            }}
-          >
+              cursor: disabled || !isDirty ? "not-allowed" : "pointer"
+            }}>
             <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden>
               <path
                 d="M2 6a4 4 0 117 2.7M2 6V3M2 6h3"
@@ -263,15 +269,15 @@ export function Workspace({
               cursor: disabled ? "not-allowed" : "pointer",
               display: "inline-flex",
               alignItems: "center",
-              gap: 6,
-            }}
-          >
+              gap: 6
+            }}>
             {isBusy && resultKind === "run" ? "Running…" : "Run"}
           </button>
           <button
             type="button"
             onClick={() => callBackend("submit")}
             disabled={disabled}
+            title="Submit fix (⌘↵)"
             style={{
               background: T.gold,
               color: T.bg,
@@ -282,9 +288,8 @@ export function Workspace({
               fontWeight: 600,
               fontFamily: T.sans,
               opacity: disabled ? 0.6 : 1,
-              cursor: disabled ? "not-allowed" : "pointer",
-            }}
-          >
+              cursor: disabled ? "not-allowed" : "pointer"
+            }}>
             {isBusy && resultKind === "submit" ? "Submitting…" : "Submit fix"}
           </button>
         </div>
@@ -302,9 +307,8 @@ export function Workspace({
             display: "flex",
             flexDirection: "column",
             background: T.bg,
-            minHeight: 0,
-          }}
-        >
+            minHeight: 0
+          }}>
           <div
             style={{
               height: 40,
@@ -313,9 +317,8 @@ export function Workspace({
               alignItems: "flex-end",
               padding: "0 16px",
               gap: 4,
-              flexShrink: 0,
-            }}
-          >
+              flexShrink: 0
+            }}>
             {TABS.map((t) => {
               const active = t.key === tab;
               return (
@@ -330,17 +333,14 @@ export function Workspace({
                     color: active ? T.text : t.locked ? T.textFaint : T.textDim,
                     background: "transparent",
                     border: "none",
-                    borderBottom: active
-                      ? `2px solid ${T.gold}`
-                      : "2px solid transparent",
+                    borderBottom: active ? `2px solid ${T.gold}` : "2px solid transparent",
                     marginBottom: -1,
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
                     fontWeight: active ? 500 : 400,
-                    cursor: t.locked ? "not-allowed" : "pointer",
-                  }}
-                >
+                    cursor: t.locked ? "not-allowed" : "pointer"
+                  }}>
                   {t.label}
                   {t.badge ? (
                     <span
@@ -350,9 +350,8 @@ export function Workspace({
                         background: T.panel2,
                         color: T.textMute,
                         padding: "1px 5px",
-                        borderRadius: 3,
-                      }}
-                    >
+                        borderRadius: 3
+                      }}>
                       {t.badge}
                     </span>
                   ) : null}
@@ -376,9 +375,8 @@ export function Workspace({
               overflow: "auto",
               padding: "24px 32px",
               fontFamily: T.sans,
-              minHeight: 0,
-            }}
-          >
+              minHeight: 0
+            }}>
             {isLoading ? (
               <p style={{ color: T.textMute, fontSize: 13 }}>Loading problem…</p>
             ) : loadError ? (
@@ -408,9 +406,8 @@ export function Workspace({
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
-            background: T.editor,
-          }}
-        >
+            background: T.editor
+          }}>
           <div
             style={{
               height: 36,
@@ -419,9 +416,8 @@ export function Workspace({
               display: "flex",
               alignItems: "center",
               padding: "0 12px",
-              flexShrink: 0,
-            }}
-          >
+              flexShrink: 0
+            }}>
             <div
               style={{
                 padding: "0 14px",
@@ -436,9 +432,8 @@ export function Workspace({
                 fontFamily: T.sans,
                 borderRight: `1px solid ${T.line}`,
                 borderLeft: `1px solid ${T.line}`,
-                marginTop: -1,
-              }}
-            >
+                marginTop: -1
+              }}>
               solution.py
               {isDirty ? (
                 <span
@@ -446,7 +441,7 @@ export function Workspace({
                     width: 6,
                     height: 6,
                     borderRadius: "50%",
-                    background: T.gold,
+                    background: T.gold
                   }}
                 />
               ) : null}
@@ -459,9 +454,8 @@ export function Workspace({
                 alignItems: "center",
                 color: T.textMute,
                 fontSize: 11,
-                fontFamily: T.mono,
-              }}
-            >
+                fontFamily: T.mono
+              }}>
               <span>Python 3.11</span>
               <span>UTF-8</span>
               <span>LF</span>
@@ -484,7 +478,7 @@ export function Workspace({
                 padding: { top: 12, bottom: 12 },
                 renderLineHighlight: "line",
                 scrollBeyondLastLine: false,
-                automaticLayout: true,
+                automaticLayout: true
               }}
             />
           </div>
@@ -497,9 +491,8 @@ export function Workspace({
               borderTop: `1px solid ${T.line}`,
               display: "flex",
               flexDirection: "column",
-              flexShrink: 0,
-            }}
-          >
+              flexShrink: 0
+            }}>
             <div
               style={{
                 height: 34,
@@ -508,14 +501,13 @@ export function Workspace({
                 alignItems: "center",
                 padding: "0 16px",
                 gap: 22,
-                fontFamily: T.sans,
-              }}
-            >
+                fontFamily: T.sans
+              }}>
               {(
                 [
                   { key: "console", label: "Console" },
                   { key: "tests", label: "Test cases" },
-                  { key: "diagnostics", label: "Diagnostics" },
+                  { key: "diagnostics", label: "Diagnostics" }
                 ] as const
               ).map((t) => {
                 const active = consoleTab === t.key;
@@ -536,9 +528,8 @@ export function Workspace({
                       marginBottom: -1,
                       fontWeight: active ? 500 : 400,
                       padding: 0,
-                      cursor: "pointer",
-                    }}
-                  >
+                      cursor: "pointer"
+                    }}>
                     {t.label}
                   </button>
                 );
@@ -565,384 +556,24 @@ export function Workspace({
                 fontSize: 12,
                 color: T.textDim,
                 lineHeight: 1.7,
-                whiteSpace: "pre-wrap",
-              }}
-            >
+                whiteSpace: "pre-wrap"
+              }}>
               {consoleTab === "tests" ? (
                 <TestsView problem={problem} result={result} />
               ) : consoleTab === "diagnostics" ? (
                 <DiagnosticsView result={result} runError={runError} />
               ) : (
-                <ConsoleView result={result} runError={runError} resultKind={resultKind} />
+                <ConsoleView
+                  result={result}
+                  runError={runError}
+                  resultKind={resultKind}
+                  problem={problem}
+                />
               )}
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ConsoleView({
-  result,
-  runError,
-  resultKind,
-}: {
-  result: SubmitResult | null;
-  runError: string | null;
-  resultKind: ResultKind | null;
-}) {
-  if (runError) {
-    return <div style={{ color: T.red }}>{runError}</div>;
-  }
-  if (!result) {
-    return (
-      <>
-        <div>
-          <span style={{ color: T.textMute }}>$</span> python solution.py
-        </div>
-        <div style={{ marginTop: 8, color: T.textFaint, fontStyle: "italic" }}>
-          Run your code to see output here.
-        </div>
-      </>
-    );
-  }
-  return (
-    <>
-      <div
-        style={{
-          color: result.verdict === "pass" ? T.sage : T.red,
-          marginBottom: 8,
-          fontFamily: T.sans,
-          fontSize: 12.5,
-          fontWeight: 500,
-        }}
-      >
-        {result.verdict === "pass"
-          ? resultKind === "submit"
-            ? "✓ All tests passed — submission accepted"
-            : "✓ Output matches expected"
-          : resultKind === "submit"
-            ? "✗ Submission failed — output did not match"
-            : "✗ Output did not match expected"}
-      </div>
-      <div style={{ color: T.text }}>
-        <span style={{ color: T.textMute }}>stdout</span>
-        {"\n"}
-        {result.stdout || "(empty)"}
-      </div>
-    </>
-  );
-}
-
-function TestsView({
-  problem,
-  result,
-}: {
-  problem: WorkspaceProblem | null;
-  result: SubmitResult | null;
-}) {
-  if (!problem?.testCases || problem.testCases.length === 0) {
-    return (
-      <div style={{ color: T.textMute, fontFamily: T.sans, fontSize: 12.5 }}>
-        Test cases are hidden for this problem.
-      </div>
-    );
-  }
-  const verdict = result?.verdict;
-  const perTestResults = result?.testCaseResults;
-  const hasPerTestResults = Array.isArray(perTestResults);
-  const hasOnlyOverallVerdict = Boolean(result) && !hasPerTestResults;
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      {hasOnlyOverallVerdict ? (
-        <div style={{ color: T.textMute, fontFamily: T.sans, fontSize: 12, marginBottom: 4 }}>
-          Per-test results are unavailable; examples show expected behavior only.
-        </div>
-      ) : null}
-      {problem.testCases.map((tc, i) => {
-        const perTest = perTestResults?.[i];
-        const ok = hasPerTestResults
-          ? (perTest?.ok ?? perTest?.passed ?? null)
-          : verdict === "pass"
-            ? true
-            : null;
-        return (
-          <div
-            key={i}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "20px 1fr 1fr",
-              alignItems: "center",
-              gap: 12,
-              color: T.textDim,
-            }}
-          >
-            <span>
-              {ok === null ? (
-                <span
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: T.textFaint,
-                    display: "inline-block",
-                  }}
-                />
-              ) : ok ? (
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
-                  <path
-                    d="M3 7.5l2.5 2.5L11 4.5"
-                    stroke={T.sage}
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              ) : ok === false ? (
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
-                  <path
-                    d="M3.5 3.5l7 7M10.5 3.5l-7 7"
-                    stroke={T.red}
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              ) : (
-                <span
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: T.textFaint,
-                    display: "inline-block",
-                  }}
-                />
-              )}
-            </span>
-            <span style={{ color: T.text }}>{tc.input}</span>
-            <span style={{ color: T.textMute }}>
-              expected <span style={{ color: T.text }}>{tc.expected}</span>
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function DiagnosticsView({
-  result,
-  runError,
-}: {
-  result: SubmitResult | null;
-  runError: string | null;
-}) {
-  if (runError) {
-    return <div style={{ color: T.red }}>{runError}</div>;
-  }
-  if (!result) {
-    return (
-      <div style={{ color: T.textFaint, fontStyle: "italic" }}>
-        Diagnostics will appear here after the runner reports back.
-      </div>
-    );
-  }
-  return (
-    <div>
-      <div style={{ color: T.textMute, marginBottom: 4 }}>verdict</div>
-      <div style={{ color: result.verdict === "pass" ? T.sage : T.red, marginBottom: 12 }}>
-        {result.verdict}
-      </div>
-      <div style={{ color: T.textMute, marginBottom: 4 }}>raw stdout</div>
-      <div style={{ color: T.text }}>{result.stdout || "(empty)"}</div>
-    </div>
-  );
-}
-
-function DescriptionTab({ problem }: { problem: WorkspaceProblem | null }) {
-  if (!problem) return null;
-  return (
-    <>
-      <h2
-        style={{
-          fontSize: 20,
-          fontWeight: 600,
-          color: T.text,
-          margin: "0 0 14px",
-          letterSpacing: -0.2,
-        }}
-      >
-        {problem.title}
-      </h2>
-
-      <div
-        style={{ color: T.textDim, fontSize: 13.5, lineHeight: 1.65 }}
-        className="dd-markdown"
-      >
-        <ReactMarkdown>{problem.description}</ReactMarkdown>
-      </div>
-
-      {problem.expectedExamples && problem.expectedExamples.length > 0 ? (
-        <div
-          style={{
-            background: T.panel,
-            border: `1px solid ${T.line}`,
-            borderRadius: 8,
-            padding: "14px 16px",
-            margin: "18px 0",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              color: T.textMute,
-              letterSpacing: 1.4,
-              textTransform: "uppercase",
-              marginBottom: 8,
-            }}
-          >
-            Expected behaviour
-          </div>
-          <div
-            style={{
-              fontFamily: T.mono,
-              fontSize: 12.5,
-              color: T.textDim,
-              lineHeight: 1.75,
-            }}
-          >
-            {problem.expectedExamples.map((ex, i) => (
-              <div key={i}>
-                {ex.call} <span style={{ color: T.textFaint }}>→</span>{" "}
-                <span style={{ color: T.syn.num }}>{ex.result}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {problem.prompt ? (
-        <div
-          style={{
-            padding: "12px 16px",
-            background: T.redDim,
-            borderRadius: 8,
-            borderLeft: `2px solid ${T.red}`,
-            margin: "18px 0",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10.5,
-              color: T.red,
-              letterSpacing: 1.4,
-              textTransform: "uppercase",
-              marginBottom: 4,
-              fontWeight: 600,
-            }}
-          >
-            Bug-finding prompt
-          </div>
-          <div style={{ fontSize: 13, color: T.text, lineHeight: 1.55 }}>{problem.prompt}</div>
-        </div>
-      ) : null}
-
-      {problem.tags && problem.tags.length > 0 ? (
-        <>
-          <h3
-            style={{
-              fontSize: 11,
-              color: T.textMute,
-              letterSpacing: 1.4,
-              textTransform: "uppercase",
-              margin: "24px 0 10px",
-            }}
-          >
-            Tags
-          </h3>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {problem.tags.map((t) => (
-              <Tag key={t}>{t}</Tag>
-            ))}
-          </div>
-        </>
-      ) : null}
-
-      <style>{`
-        .dd-markdown code { font-family: ${T.mono}; background: ${T.panel}; color: ${T.text}; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
-        .dd-markdown p { margin: 0 0 12px; }
-        .dd-markdown ul, .dd-markdown ol { margin: 0 0 12px; padding-left: 20px; }
-        .dd-markdown pre { background: ${T.panel}; border: 1px solid ${T.line}; border-radius: 8px; padding: 12px 14px; overflow-x: auto; }
-        .dd-markdown pre code { background: transparent; padding: 0; }
-        .dd-markdown strong { color: ${T.text}; }
-      `}</style>
-    </>
-  );
-}
-
-function HintsTab() {
-  return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          marginBottom: 4,
-        }}
-      >
-        <h2
-          style={{
-            fontSize: 20,
-            fontWeight: 600,
-            color: T.text,
-            margin: 0,
-            letterSpacing: -0.2,
-          }}
-        >
-          Hints
-        </h2>
-        <span style={{ fontSize: 11.5, color: T.textMute, fontFamily: T.mono }}>
-          0 of 0 revealed
-        </span>
-      </div>
-      <p style={{ fontSize: 13, lineHeight: 1.6, color: T.textDim, margin: "0 0 22px" }}>
-        Hints are progressive — each one is more specific than the last. They&apos;ll appear here
-        once the problem author has added them.
-      </p>
-      <div
-        style={{
-          background: T.panel,
-          border: `1px dashed ${T.lineStrong}`,
-          borderRadius: 10,
-          padding: "20px 18px",
-          textAlign: "center",
-          color: T.textMute,
-          fontSize: 13,
-        }}
-      >
-        No hints available for this problem yet.
-      </div>
-    </>
-  );
-}
-
-function EmptyState({ title, body }: { title: string; body: string }) {
-  return (
-    <div
-      style={{
-        background: T.panel,
-        border: `1px dashed ${T.lineStrong}`,
-        borderRadius: 10,
-        padding: "32px 18px",
-        textAlign: "center",
-        color: T.textMute,
-      }}
-    >
-      <div style={{ fontSize: 14, color: T.text, fontWeight: 500, marginBottom: 6 }}>{title}</div>
-      <div style={{ fontSize: 12.5, lineHeight: 1.55 }}>{body}</div>
     </div>
   );
 }
