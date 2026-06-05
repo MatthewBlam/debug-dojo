@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from llm.client import GeminiClient, get_gemini_client
 
-
-_FEEDBACK_PROMPT = """You are a coding mentor for Debug Dojo, a platform where developers fix buggy code.
+_FEEDBACK_PROMPT = """You are a coding mentor for Debug Dojo.
 
 A student just solved a problem. Generate a short, encouraging feedback card (3-5 sentences).
 

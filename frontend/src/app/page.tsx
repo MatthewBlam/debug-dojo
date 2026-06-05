@@ -26,7 +26,7 @@ export default function LandingPage() {
         color: T.text,
         fontFamily: T.sans,
         minHeight: "100dvh",
-        overflowX: "hidden"
+        overflowX: "clip"
       }}>
       <LandingNav />
       <Hero />

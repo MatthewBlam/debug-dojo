@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import os
-import time
+import asyncio
+from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -9,47 +10,96 @@ from fastapi.testclient import TestClient
 import main
 from judge0.client import RunResult
 
-TWO_SUM_PROBLEM_ID = "2da798cf-79a9-4741-8382-f96dff10efce"
-
 
 def _make_accepted_result(stdout: str) -> RunResult:
     return RunResult(stdout=stdout, stderr="", status="Accepted", time_ms=12)
 
 
-def test_submission_passes_when_all_test_cases_match(monkeypatch: pytest.MonkeyPatch) -> None:
-    outputs = iter(["[0,1]\n", "[0,1]\n", "[]\n"])
+def _problem() -> dict[str, Any]:
+    return {
+        "id": "problem-1",
+        "short_id": "001",
+        "title": "Two Sum",
+        "description": "Find a pair.",
+        "difficulty": "easy",
+        "bug_category": "bad_complexity",
+        "function_signature": "def two_sum(nums: list[int], target: int) -> list[int]",
+        "reference_solution": (
+            "def two_sum(nums, target):\n"
+            "    seen = {}\n"
+            "    for i, n in enumerate(nums):\n"
+            "        if target - n in seen:\n"
+            "            return [seen[target - n], i]\n"
+            "        seen[n] = i\n"
+            "    return []\n"
+        ),
+        "slop_code": "def two_sum(nums, target): return []",
+        "target_complexity": "O(n)",
+        "test_cases": [
+            {"input": {"nums": [2, 7, 11, 15], "target": 9}, "is_hidden": False},
+            {"input": {"nums": [3, 3], "target": 6}, "is_hidden": True},
+        ],
+    }
+
+
+async def _fake_two_sum_runner(code: str, stdin: str) -> RunResult:
+    if "return [9, 9]" in code:
+        return _make_accepted_result("[9,9]\n")
+    return _make_accepted_result("[0,1]\n")
+
+
+def test_run_uses_visible_tests_and_does_not_create_submission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
 
     async def fake_run_python(code: str, stdin: str) -> RunResult:
-        return _make_accepted_result(next(outputs))
+        calls.append(stdin)
+        return await _fake_two_sum_runner(code, stdin)
 
     monkeypatch.setattr(main, "run_python", fake_run_python)
+    monkeypatch.setattr(main, "_load_problem_for_judge", lambda problem_id: _problem())
     client = TestClient(main.app)
 
     response = client.post(
-        "/api/v1/submissions",
-        json={"problem_id": TWO_SUM_PROBLEM_ID, "code": "def two_sum(nums, target): return [0,1]"},
+        "/api/v1/runs",
+        json={"problem_id": "problem-1", "code": "def two_sum(nums, target): return [0, 1]"},
     )
 
     assert response.status_code == 200
     data = response.json()
     assert data["verdict"] == "pass"
-    assert data["cases_passed"] == 3
-    assert data["cases_total"] == 3
-    assert len(data["test_case_results"]) == 3
-    assert all(tc["passed"] for tc in data["test_case_results"])
-    assert "complexity_detected" in data
+    assert data["cases_passed"] == 1
+    assert data["cases_total"] == 1
+    assert len(calls) == 2
 
 
-def test_submission_returns_partial_when_complexity_exceeds_target(monkeypatch: pytest.MonkeyPatch) -> None:
-    """O(n^2) code that passes all tests should get 'partial' verdict."""
-    outputs = iter(["[0,1]\n", "[0,1]\n", "[]\n"])
+def test_differential_judging_compares_user_and_reference_outputs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(main, "run_python", _fake_two_sum_runner)
 
-    async def fake_run_python(code: str, stdin: str) -> RunResult:
-        return _make_accepted_result(next(outputs))
+    result = asyncio.run(
+        main._judge_code(
+            problem=_problem(),
+            code="def two_sum(nums, target): return [9, 9]",
+            include_hidden=True,
+            include_io=True,
+            include_feedback=False,
+        )
+    )
 
-    monkeypatch.setattr(main, "run_python", fake_run_python)
-    client = TestClient(main.app)
+    assert result.verdict == "fail"
+    assert result.cases_passed == 0
+    assert result.test_case_results[0].expected == "[0,1]"
+    assert result.test_case_results[0].actual == "[9,9]"
+    assert result.test_case_results[1].input is None
 
+
+def test_complexity_produces_partial_after_correctness_passes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(main, "run_python", _fake_two_sum_runner)
     brute_force_code = (
         "def two_sum(nums, target):\n"
         "    for i in range(len(nums)):\n"
@@ -59,114 +109,97 @@ def test_submission_returns_partial_when_complexity_exceeds_target(monkeypatch: 
         "    return []\n"
     )
 
-    response = client.post(
-        "/api/v1/submissions",
-        json={"problem_id": TWO_SUM_PROBLEM_ID, "code": brute_force_code},
+    result = asyncio.run(
+        main._judge_code(
+            problem=_problem(),
+            code=brute_force_code,
+            include_hidden=True,
+            include_io=False,
+            include_feedback=False,
+        )
     )
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["verdict"] == "partial"
-    assert data["cases_passed"] == 3
-    assert data["cases_total"] == 3
-    assert data["complexity_detected"] is not None
+    assert result.verdict == "partial"
+    assert result.cases_passed == result.cases_total
+    assert result.complexity_detected == "O(n^2)"
 
 
-def test_submission_fails_when_output_mismatches(monkeypatch: pytest.MonkeyPatch) -> None:
-    async def fake_run_python(code: str, stdin: str) -> RunResult:
-        return _make_accepted_result("[9,9]\n")
-
-    monkeypatch.setattr(main, "run_python", fake_run_python)
+def test_submit_requires_authentication(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(main, "_load_problem_for_judge", lambda problem_id: _problem())
     client = TestClient(main.app)
 
     response = client.post(
         "/api/v1/submissions",
-        json={"problem_id": TWO_SUM_PROBLEM_ID, "code": "def two_sum(nums, target): return [9,9]"},
+        json={"problem_id": "problem-1", "code": "def two_sum(nums, target): return [0, 1]"},
     )
 
-    assert response.status_code == 200
-    data = response.json()
-    assert data["verdict"] == "fail"
-    assert data["cases_passed"] < data["cases_total"]
+    assert response.status_code == 401
 
 
-def test_submission_returns_404_for_invalid_problem_id() -> None:
-    client = TestClient(main.app)
+class _FakeInsertTable:
+    def __init__(self) -> None:
+        self.inserted: dict[str, Any] | None = None
 
-    response = client.post(
-        "/api/v1/submissions",
-        json={"problem_id": "does-not-exist", "code": "print('hi')"},
-    )
+    def insert(self, data: dict[str, Any]) -> _FakeInsertTable:
+        self.inserted = data
+        return self
 
-    assert response.status_code == 404
-    assert response.json()["detail"] == "Problem not found"
-
-
-def test_submission_maps_judge0_failures_to_fail(monkeypatch: pytest.MonkeyPatch) -> None:
-    async def fake_run_python(code: str, stdin: str) -> RunResult:
-        raise ValueError("bad Judge0 payload")
-
-    monkeypatch.setattr(main, "run_python", fake_run_python)
-    client = TestClient(main.app)
-
-    response = client.post(
-        "/api/v1/submissions",
-        json={"problem_id": TWO_SUM_PROBLEM_ID, "code": "def two_sum(nums, target): return []"},
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["verdict"] == "fail"
-    assert data["cases_passed"] == 0
+    def execute(self) -> SimpleNamespace:
+        return SimpleNamespace(data=[{"id": "submission-1"}])
 
 
-def test_submission_maps_judge0_internal_error_to_fail(
+class _FakeSupabase:
+    def __init__(self) -> None:
+        self.submissions = _FakeInsertTable()
+
+    def table(self, name: str) -> _FakeInsertTable:
+        assert name == "submissions"
+        return self.submissions
+
+
+def test_submit_creates_pending_submission(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def fake_run_python(code: str, stdin: str) -> RunResult:
-        return RunResult(stdout="", stderr="boom", status="Internal Error", time_ms=None)
+    fake_supabase = _FakeSupabase()
 
-    monkeypatch.setattr(main, "run_python", fake_run_python)
+    async def fake_background_task(submission_id: str, problem_id: str, code: str) -> None:
+        return None
+
+    main.app.dependency_overrides[main.require_user_id] = lambda: "user-1"
+    monkeypatch.setattr(main, "_load_problem_for_judge", lambda problem_id: _problem())
+    monkeypatch.setattr(main, "get_supabase", lambda: fake_supabase)
+    monkeypatch.setattr(main, "_judge_submission_task", fake_background_task)
     client = TestClient(main.app)
 
-    response = client.post(
-        "/api/v1/submissions",
-        json={"problem_id": TWO_SUM_PROBLEM_ID, "code": "def two_sum(nums, target): return []"},
-    )
+    try:
+        response = client.post(
+            "/api/v1/submissions",
+            json={"problem_id": "problem-1", "code": "def two_sum(nums, target): return [0, 1]"},
+        )
+    finally:
+        main.app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    data = response.json()
-    assert data["verdict"] == "fail"
-    assert data["cases_passed"] == 0
+    assert response.json() == {"submission_id": "submission-1", "verdict": "pending"}
+    assert fake_supabase.submissions.inserted is not None
+    assert fake_supabase.submissions.inserted["verdict"] == "pending"
+    assert fake_supabase.submissions.inserted["user_id"] == "user-1"
 
 
-@pytest.mark.skipif(
-    os.getenv("RUN_JUDGE0_INTEGRATION") != "1",
-    reason="Set RUN_JUDGE0_INTEGRATION=1 to run real Judge0 integration tests.",
-)
-def test_submission_endpoint_integration_with_real_judge0() -> None:
-    client = TestClient(main.app)
+def test_gemini_failure_uses_fallback_feedback(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def fake_feedback(**kwargs: Any) -> str:
+        raise RuntimeError("no gemini")
 
-    started = time.perf_counter()
-    response = client.post(
-        "/api/v1/submissions",
-        json={
-            "problem_id": TWO_SUM_PROBLEM_ID,
-            "code": (
-                "def two_sum(nums, target):\n"
-                "    seen = {}\n"
-                "    for i, n in enumerate(nums):\n"
-                "        if target - n in seen:\n"
-                "            return [seen[target - n], i]\n"
-                "        seen[n] = i\n"
-                "    return []\n"
-            ),
-        },
+    monkeypatch.setattr(main, "generate_feedback_card", fake_feedback)
+    result = main.JudgeResult(
+        verdict="fail",
+        stdout="",
+        cases_passed=0,
+        cases_total=2,
+        test_case_results=[],
+        complexity_detected=None,
     )
-    elapsed = time.perf_counter() - started
 
-    assert response.status_code == 200
-    assert elapsed < 30
-    data = response.json()
-    assert data["verdict"] == "pass"
-    assert data["cases_passed"] == data["cases_total"]
+    feedback = asyncio.run(main._build_feedback(_problem(), result))
+
+    assert "0/2 cases passed" in feedback

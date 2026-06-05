@@ -1,0 +1,52 @@
+short_id: "003"
+title: "Longest Substring Without Repeating Characters"
+description: |
+  Given a string `s`, return the length of the longest substring without
+  repeating characters.
+difficulty: "medium"
+bug_category: "subtle_logic_error"
+tags: ["strings", "sliding window", "hash map"]
+function_signature: "def length_of_longest_substring(s: str) -> int"
+reference_solution: |
+  def length_of_longest_substring(s):
+      seen = {}
+      left = 0
+      best = 0
+      for right, ch in enumerate(s):
+          if ch in seen and seen[ch] >= left:
+              left = seen[ch] + 1
+          seen[ch] = right
+          best = max(best, right - left + 1)
+      return best
+slop_code: |
+  def length_of_longest_substring(s):
+      seen = set()
+      left = 0
+      best = 0
+      for right, ch in enumerate(s):
+          if ch in seen:
+              seen.clear()
+              left = right
+          seen.add(ch)
+          best = max(best, right - left + 1)
+      return best
+target_complexity: "O(n)"
+test_cases:
+  - input:
+      s: "abcabcbb"
+    is_hidden: false
+  - input:
+      s: "bbbbb"
+    is_hidden: false
+  - input:
+      s: "pwwkew"
+    is_hidden: false
+  - input:
+      s: ""
+    is_hidden: true
+  - input:
+      s: "abba"
+    is_hidden: true
+  - input:
+      s: "dvdf"
+    is_hidden: true

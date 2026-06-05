@@ -1,18 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getProblem } from "@/lib/api";
 import { Workspace, type WorkspaceProblem } from "@/components/Workspace";
-
-type ProblemRecord = {
-  id: string;
-  title: string;
-  description: string;
-  slop_code: string;
-  difficulty: string | null;
-  bug_category: string | null;
-  target_complexity: string | null;
-};
 
 export default function ProblemPage({ params }: { params: Promise<{ id: string }> }) {
   const [problem, setProblem] = useState<WorkspaceProblem | null>(null);
@@ -29,23 +19,18 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
         const resolved = await params;
         if (!active) return;
 
-        const { data, error: queryError } = await supabase
-          .from("problems")
-          .select("id,title,description,slop_code,difficulty,bug_category,target_complexity")
-          .eq("id", resolved.id)
-          .single<ProblemRecord>();
-
+        const data = await getProblem(resolved.id);
         if (!active) return;
-        if (queryError || !data) throw queryError ?? new Error("Problem not found");
 
         const tags = [
-          data.bug_category ? data.bug_category.replace(/_/g, " ") : null,
-          data.target_complexity ? `complexity: ${data.target_complexity}` : null
+          data.bug_category.replace(/_/g, " "),
+          ...data.tags,
+          `complexity: ${data.target_complexity}`
         ].filter((x): x is string => Boolean(x));
 
         setProblem({
           id: data.id,
-          shortId: data.id.replace(/[^0-9a-f]/gi, "").slice(0, 4),
+          shortId: data.short_id,
           title: data.title,
           difficulty: data.difficulty,
           description: data.description,
@@ -53,7 +38,8 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
           tags,
           prompt:
             "The starter code compiles but produces wrong results. Find and fix the defect without changing the function signature.",
-          targetComplexity: data.target_complexity
+          targetComplexity: data.target_complexity,
+          testCases: data.visible_test_cases.map((tc) => ({ input: tc.input }))
         });
       } catch {
         if (!active) return;

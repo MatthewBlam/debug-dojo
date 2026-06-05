@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { EditorProps } from "@monaco-editor/react";
 
 import { T } from "@/lib/tokens";
-import { supabase } from "@/lib/supabase";
+import { getSubmission, runCode, submitCode } from "@/lib/api";
 import { TopNav } from "@/components/TopNav";
 import { Difficulty, toDifficultyLevel } from "@/components/Difficulty";
 import type { DifficultyLevel } from "@/lib/tokens";
@@ -79,11 +79,6 @@ export function Workspace({
     return () => window.clearInterval(id);
   }, [problem, startedAt]);
 
-  const apiBaseUrl = useMemo(
-    () => process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000",
-    []
-  );
-
   const callBackend = async (kind: ResultKind) => {
     if (!problem) return;
     setIsBusy(true);
@@ -92,39 +87,37 @@ export function Workspace({
     setRunError(null);
     setConsoleTab(kind === "run" ? "console" : "tests");
 
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 300000);
-
-    let authHeaders: Record<string, string> = {};
     try {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.access_token) {
-        authHeaders = { Authorization: `Bearer ${data.session.access_token}` };
+      if (kind === "run") {
+        setResult((await runCode(problem.id, code)) as SubmitResult);
+      } else {
+        const submissionId = await submitCode(problem.id, code);
+        let finalResult: SubmitResult | null = null;
+        for (let attempt = 0; attempt < 60; attempt++) {
+          const submission = await getSubmission(submissionId);
+          if (submission.verdict !== "pending") {
+            finalResult = {
+              verdict: submission.verdict,
+              stdout: "",
+              cases_passed: submission.cases_passed,
+              cases_total: submission.cases_total,
+              test_case_results: submission.test_case_results,
+              submission_id: submission.id,
+              complexity_detected: submission.complexity_detected,
+              feedback_card: submission.feedback_card
+            };
+            break;
+          }
+          await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        }
+        if (!finalResult) throw new Error("Submission is still pending. Check Submissions shortly.");
+        setResult(finalResult);
       }
-    } catch {
-      // No auth — continue without token
-    }
-
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/v1/submissions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ problem_id: problem.id, code, mode: kind }),
-        signal: controller.signal
-      });
-      if (!response.ok) throw new Error(`Backend returned ${response.status}`);
-      const data = (await response.json()) as SubmitResult;
-      setResult(data);
     } catch (e) {
       setRunError(
-        e instanceof DOMException && e.name === "AbortError"
-          ? "The runner timed out. Please try again."
-          : e instanceof Error
-            ? `Could not reach the runner: ${e.message}`
-            : "Could not reach the runner."
+        e instanceof Error ? `Could not reach the runner: ${e.message}` : "Could not reach the runner."
       );
     } finally {
-      window.clearTimeout(timeoutId);
       setIsBusy(false);
     }
   };

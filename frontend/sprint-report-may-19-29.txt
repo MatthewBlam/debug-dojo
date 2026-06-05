@@ -12,7 +12,7 @@ PRs Merged:
 
 Code Reviews Performed:
 - PR #93 — Rework frontend to new Debug Dojo design (by artiomcovali)
-- PR #95 — SaaS-style landing page + /practice demo (by artiomcovali)
+- PR #95 — SaaS-style landing page + demo route (by artiomcovali)
 - PR #97 — Sign-in page with email + GitHub OAuth (by artiomcovali)
 - PR #103 — Added logo (by artiomcovali)
 - Estimate for reviews: 1.5h / Actual: ~1.5h

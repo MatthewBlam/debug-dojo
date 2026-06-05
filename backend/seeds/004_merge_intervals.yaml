@@ -1,0 +1,53 @@
+short_id: "004"
+title: "Merge Intervals"
+description: |
+  Given a list of intervals `[start, end]`, merge all overlapping intervals
+  and return the result sorted by start time.
+difficulty: "medium"
+bug_category: "missing_edge_case"
+tags: ["arrays", "sorting"]
+function_signature: "def merge_intervals(intervals: list[list[int]]) -> list[list[int]]"
+reference_solution: |
+  def merge_intervals(intervals):
+      if not intervals:
+          return []
+      intervals = sorted(intervals, key=lambda item: item[0])
+      merged = [intervals[0][:]]
+      for start, end in intervals[1:]:
+          if start <= merged[-1][1]:
+              merged[-1][1] = max(merged[-1][1], end)
+          else:
+              merged.append([start, end])
+      return merged
+slop_code: |
+  def merge_intervals(intervals):
+      if not intervals:
+          return []
+      intervals = sorted(intervals, key=lambda item: item[0])
+      merged = [intervals[0][:]]
+      for start, end in intervals[1:]:
+          if start < merged[-1][1]:
+              merged[-1][1] = max(merged[-1][1], end)
+          else:
+              merged.append([start, end])
+      return merged
+target_complexity: "O(n log n)"
+test_cases:
+  - input:
+      intervals: [[1, 3], [2, 6], [8, 10], [15, 18]]
+    is_hidden: false
+  - input:
+      intervals: [[1, 4], [4, 5]]
+    is_hidden: false
+  - input:
+      intervals: []
+    is_hidden: false
+  - input:
+      intervals: [[1, 4], [0, 2], [3, 5]]
+    is_hidden: true
+  - input:
+      intervals: [[1, 10], [2, 3], [4, 8]]
+    is_hidden: true
+  - input:
+      intervals: [[5, 7], [1, 2], [2, 3]]
+    is_hidden: true

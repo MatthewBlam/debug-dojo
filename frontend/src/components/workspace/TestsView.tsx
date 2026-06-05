@@ -30,6 +30,7 @@ export function TestsView({
       {problem.testCases.map((tc, i) => {
         const perTest = perTestResults?.[i];
         const ok = hasPerTestResults ? (perTest?.passed ?? null) : verdict === "pass" ? true : null;
+        const inputText = JSON.stringify(perTest?.input ?? tc.input);
         return (
           <div
             key={i}
@@ -82,9 +83,12 @@ export function TestsView({
                 />
               )}
             </span>
-            <span style={{ color: T.text }}>{tc.input}</span>
+            <span style={{ color: T.text, fontFamily: T.mono, fontSize: 12 }}>{inputText}</span>
             <span style={{ color: T.textMute }}>
-              expected <span style={{ color: T.text }}>{tc.expected}</span>
+              expected{" "}
+              <span style={{ color: T.text }}>
+                {perTest?.expected ?? tc.expected ?? "reference output"}
+              </span>
             </span>
           </div>
         );

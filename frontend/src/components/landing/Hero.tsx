@@ -8,7 +8,10 @@ export function Hero() {
     <section
       style={{
         position: "relative",
-        padding: "clamp(64px, 10vw, 120px) 0 clamp(56px, 8vw, 96px)",
+        minHeight: "calc(100dvh - 64px)",
+        display: "flex",
+        alignItems: "center",
+        padding: "clamp(40px, 7vw, 72px) 0",
         overflow: "hidden"
       }}>
       {/* ambient gradient */}

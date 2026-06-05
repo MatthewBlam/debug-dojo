@@ -3,20 +3,19 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { listProblems } from "@/lib/api";
 import { T, type DifficultyLevel } from "@/lib/tokens";
 import { TopNav } from "@/components/TopNav";
 import { Tag } from "@/components/Tag";
 import { Difficulty, toDifficultyLevel } from "@/components/Difficulty";
-import { PRACTICE_PROBLEM } from "@/lib/practice-problem";
 
 type ProblemRow = {
   id: string;
+  short_id: string;
   title: string;
-  difficulty: string | null;
-  bug_category: string | null;
-  status: string | null;
-  created_at: string | null;
+  difficulty: string;
+  bug_category: string;
+  tags: string[];
 };
 
 type DisplayRow = {
@@ -25,7 +24,6 @@ type DisplayRow = {
   title: string;
   difficulty: DifficultyLevel;
   tags: string[];
-  isPractice?: boolean;
 };
 
 type DifficultyFilter = "all" | DifficultyLevel;
@@ -36,15 +34,6 @@ const DIFFICULTY_OPTIONS: { value: DifficultyFilter; label: string }[] = [
   { value: "Medium", label: "Medium" },
   { value: "Hard", label: "Hard" }
 ];
-
-const PRACTICE_ROW: DisplayRow = {
-  id: PRACTICE_PROBLEM.id,
-  short: PRACTICE_PROBLEM.shortId,
-  title: `${PRACTICE_PROBLEM.title} — demo`,
-  difficulty: PRACTICE_PROBLEM.difficulty,
-  tags: PRACTICE_PROBLEM.tags,
-  isPractice: true
-};
 
 function bugCategoryToTag(raw: string | null): string {
   if (!raw) return "general";
@@ -62,8 +51,8 @@ export default function DashboardPage() {
 function ProblemsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [supabaseRows, setSupabaseRows] = useState<DisplayRow[] | null>(null);
-  const [supabaseError, setSupabaseError] = useState<string | null>(null);
+  const [problemRows, setProblemRows] = useState<DisplayRow[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const search = searchParams.get("q") ?? "";
   const difficulty: DifficultyFilter =
     (searchParams.get("difficulty") as DifficultyFilter) || "all";
@@ -87,35 +76,25 @@ function ProblemsContent() {
     let active = true;
     void (async () => {
       try {
-        const { data, error: queryError } = await supabase
-          .from("problems")
-          .select("id,title,difficulty,bug_category,status,created_at")
-          .order("created_at", { ascending: true });
+        const data = await listProblems();
 
         if (!active) return;
 
-        if (queryError) {
-          setSupabaseError("Could not load problems from Supabase.");
-          setSupabaseRows([]);
-          return;
-        }
-
         const list = (data ?? []) as ProblemRow[];
-        setSupabaseRows(
-          list
-            .filter((p) => p.id !== PRACTICE_PROBLEM.id)
-            .map((p, i) => ({
-              id: p.id,
-              short: String(200 + i).padStart(3, "0"),
-              title: p.title,
-              difficulty: toDifficultyLevel(p.difficulty),
-              tags: [bugCategoryToTag(p.bug_category)].filter(Boolean)
-            }))
+        setProblemRows(
+          list.map((p) => ({
+            id: p.id,
+            short: p.short_id,
+            title: p.title,
+            difficulty: toDifficultyLevel(p.difficulty),
+            tags: [bugCategoryToTag(p.bug_category), ...p.tags].filter(Boolean)
+          }))
         );
+        setLoadError(null);
       } catch {
         if (active) {
-          setSupabaseError("Supabase not configured.");
-          setSupabaseRows([]);
+          setLoadError("Could not load problems from the backend.");
+          setProblemRows([]);
         }
       }
     })();
@@ -124,10 +103,7 @@ function ProblemsContent() {
     };
   }, []);
 
-  const allRows = useMemo<DisplayRow[]>(
-    () => [PRACTICE_ROW, ...(supabaseRows ?? [])],
-    [supabaseRows]
-  );
+  const allRows = useMemo<DisplayRow[]>(() => problemRows ?? [], [problemRows]);
 
   const bugCategories = useMemo(() => {
     const set = new Set<string>();
@@ -147,20 +123,7 @@ function ProblemsContent() {
     });
   }, [allRows, search, difficulty, bugCategory]);
 
-  const isLoadingList = supabaseRows === null;
-  const stats = [
-    { l: "Available", v: String(allRows.length), s: "problems" },
-    {
-      l: "Easy",
-      v: String(allRows.filter((r) => r.difficulty === "Easy").length),
-      s: "problems"
-    },
-    {
-      l: "Hard",
-      v: String(allRows.filter((r) => r.difficulty === "Hard").length),
-      s: "problems"
-    }
-  ];
+  const isLoadingList = problemRows === null;
 
   return (
     <div
@@ -217,42 +180,37 @@ function ProblemsContent() {
                 }}>
                 Find the bug.
               </span>
-              <span style={{ color: T.textDim, fontWeight: 400 }}> {allRows.length} problems.</span>
             </h1>
           </div>
 
           <div
+            aria-label={`${allRows.length} published problems`}
             style={{
-              display: "flex",
-              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              padding: "6px 10px",
               background: T.panel,
               border: `1px solid ${T.line}`,
-              borderRadius: 10,
-              overflow: "hidden"
+              borderRadius: 6,
+              color: T.textDim,
+              fontSize: 12,
+              fontFamily: T.sans,
+              whiteSpace: "nowrap"
             }}>
-            {stats.map((s, i) => (
-              <div
-                key={s.l}
-                style={{
-                  padding: "12px 22px",
-                  minWidth: 120,
-                  borderLeft: i ? `1px solid ${T.line}` : "none"
-                }}>
-                <div style={{ fontSize: 11, color: T.textMute, marginBottom: 4 }}>{s.l}</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                  <span
-                    style={{
-                      fontSize: 22,
-                      fontWeight: 600,
-                      color: T.text,
-                      fontVariantNumeric: "tabular-nums"
-                    }}>
-                    {s.v}
-                  </span>
-                  <span style={{ fontSize: 12, color: T.textFaint }}>{s.s}</span>
-                </div>
-              </div>
-            ))}
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: T.gold,
+                flexShrink: 0
+              }}
+            />
+            <span style={{ fontVariantNumeric: "tabular-nums", color: T.text }}>
+              {allRows.length}
+            </span>
+            <span>published problems</span>
           </div>
         </div>
 
@@ -406,25 +364,6 @@ function ProblemsContent() {
           ) : null}
 
           <div style={{ flex: 1 }} />
-
-          <Link
-            href="/practice"
-            style={{
-              padding: "8px 14px",
-              fontSize: 12.5,
-              background: T.gold,
-              color: T.bg,
-              border: "none",
-              borderRadius: 8,
-              fontWeight: 600,
-              fontFamily: T.sans,
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6
-            }}>
-            Try the demo problem →
-          </Link>
         </div>
 
         {/* Table */}
@@ -460,13 +399,13 @@ function ProblemsContent() {
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: "32px 20px", color: T.textMute, fontSize: 13 }}>
-              {supabaseError ?? "No problems match your filters."}
+              {loadError ?? "No problems match your filters."}
             </div>
           ) : (
             filtered.map((r, i) => (
               <Link
-                key={r.id + (r.isPractice ? "-practice" : "")}
-                href={r.isPractice ? "/practice" : `/problems/${r.id}`}
+                key={r.id}
+                href={`/problems/${r.id}`}
                 style={{
                   display: "grid",
                   gridTemplateColumns: "60px 1fr 110px 110px 240px",
@@ -474,7 +413,7 @@ function ProblemsContent() {
                   fontSize: 13.5,
                   color: T.text,
                   borderBottom: i < filtered.length - 1 ? `1px solid ${T.lineSoft}` : "none",
-                  background: r.isPractice ? "rgba(212,168,87,0.04)" : "transparent",
+                  background: "transparent",
                   alignItems: "center",
                   textDecoration: "none",
                   transition: "background 120ms ease"
@@ -502,18 +441,11 @@ function ProblemsContent() {
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis"
-                    }}>
+                  }}>
                     {r.title}
                   </span>
-                  {r.isPractice ? (
-                    <Tag tone="gold" style={{ flexShrink: 0 }}>
-                      demo
-                    </Tag>
-                  ) : null}
                 </div>
-                <span style={{ color: T.textFaint, fontSize: 12 }}>
-                  {r.isPractice ? "Open now" : "—"}
-                </span>
+                <span style={{ color: T.textFaint, fontSize: 12 }}>Open</span>
                 <Difficulty level={r.difficulty} />
                 <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                   {r.tags.map((t) => (
@@ -525,10 +457,8 @@ function ProblemsContent() {
           )}
         </div>
 
-        {supabaseError ? (
-          <div style={{ marginTop: 12, fontSize: 11.5, color: T.textMute }}>
-            Note: {supabaseError} The demo problem above works without Supabase.
-          </div>
+        {loadError ? (
+          <div style={{ marginTop: 12, fontSize: 11.5, color: T.textMute }}>Note: {loadError}</div>
         ) : null}
       </div>
 
