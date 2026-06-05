@@ -1,0 +1,23 @@
+You are generating test cases for a Python coding problem on Debug Dojo.
+
+FUNCTION SIGNATURE: {function_signature}
+PROBLEM DESCRIPTION: {description}
+DIFFICULTY: {difficulty}
+
+Generate exactly {num_cases} test cases as a JSON array. Each test case should be an object with:
+- "input": a JSON string representing the keyword arguments to the function (e.g., '{{"nums": [2, 7, 11, 15], "target": 9}}')
+- "expected_output": the JSON-encoded expected return value (e.g., "[0,1]")
+
+Requirements:
+- Include 2-3 basic/happy-path cases
+- Include 2-3 edge cases (empty input, single element, zeros, negatives, large values)
+- Include 1-2 boundary cases specific to the problem
+- All inputs must match the function signature's parameter names and types
+- expected_output must be JSON-parseable
+- Output ONLY the JSON array, no explanation or markdown formatting
+
+Example format:
+[
+  {{"input": "{{\\"nums\\": [2, 7, 11, 15], \\"target\\": 9}}", "expected_output": "[0,1]"}},
+  {{"input": "{{\\"nums\\": [], \\"target\\": 0}}", "expected_output": "[]"}}
+]

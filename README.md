@@ -1,117 +1,111 @@
 # Debug Dojo
 
-Debug Dojo is a Python debugging practice app. It pairs broken starter
-solutions with focused problem statements so developers can fix defects,
-run code, and compare their answer against expected output.
+**A coding-practice platform where you fix deliberately buggy AI-generated code.**
 
-The current sprint-1 app includes a Next.js frontend, a FastAPI backend,
-a local Judge0 runner, Supabase schema/seed files, and a single seeded
-Two Sum problem.
+![Debug Dojo](frontend/public/logo.png)
 
-## Project Structure
+## What is Debug Dojo?
 
-- [frontend/](frontend/README.md) - Next.js App Router UI
-- [backend/](backend/README.md) - FastAPI API and Judge0 integration
-- [backend/supabase/](backend/supabase) - Supabase schema and seed SQL
-- [docs/](docs) - demo script and demo artifact notes
+Debug Dojo presents "slop" -- AI-generated code with intentional bugs -- and
+challenges you to find and fix the defect. The platform judges your fix for
+correctness (all test cases must pass) and efficiency (Big-O complexity
+analysis against a target bound).
 
-## Requirements
+## Tech Stack
 
-- Node.js: see [.nvmrc](.nvmrc)
-- Python: see [.python-version](.python-version)
-- Docker Desktop or Docker Engine for Judge0
-- `corepack` enabled for pnpm
-- Optional: `uv` for faster backend setup
+| Layer | Technology |
+|----------|------------|
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Monaco Editor, Tailwind CSS |
+| Backend | FastAPI (Python 3.12), Judge0 CE (Docker) |
+| Database | Supabase (Postgres) with Row-Level Security |
+| AI | Google Gemini 2.5 Flash -- slop generation, test case generation, feedback cards |
 
-## Local Development
+## Architecture
 
-Copy the example env files before running locally:
-
-```sh
-cp .env.example .env
-cp frontend/.env.example frontend/.env
-cp backend/.env.example backend/.env
+```
+┌─────────┐     ┌──────────┐     ┌──────────┐
+│ Browser  │────>│ Next.js  │────>│ FastAPI  │
+└─────────┘     └──────────┘     └────┬─────┘
+                                      │
+                        ┌─────────────┼─────────────┐
+                        │             │             │
+                   ┌────▼───┐  ┌─────▼────┐  ┌─────▼────┐
+                   │ Judge0 │  │ Supabase │  │ Gemini   │
+                   └────────┘  └──────────┘  └──────────┘
 ```
 
-Fill in the Supabase values if you want to load persisted problems from
-Supabase. Judge0 defaults to <http://127.0.0.1:2358>, and the backend
-defaults to <http://127.0.0.1:8000>.
+## Getting Started
 
-Install dependencies:
+### Prerequisites
 
-```sh
+- Node.js 22+
+- Python 3.12+
+- Docker
+- Supabase account
+- Gemini API key
+
+### Setup
+
+```bash
+# Clone
+git clone https://github.com/MatthewBlam/debug-dojo.git
+cd debug-dojo
+
+# Install
 make install
-```
 
-Start the local stack:
+# Configure environment
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+# Edit both files with your Supabase and Gemini credentials
 
-```sh
+# Start services (Judge0)
+docker compose up -d
+
+# Run
 make dev
 ```
 
-This starts Judge0, FastAPI, and Next.js. The app runs at
-<http://localhost:3000>, and the API health check is
-<http://127.0.0.1:8000/health>.
+## Project Structure
 
-Stop the Judge0 containers:
-
-```sh
-make stop
+```
+debug-dojo/
+├── frontend/          # Next.js app
+│   ├── src/app/       # Pages (App Router)
+│   ├── src/components # UI components
+│   └── src/lib/       # Hooks, utils, tokens
+├── backend/           # FastAPI server
+│   ├── analysis/      # AST complexity analyzer
+│   ├── llm/           # Gemini client + feedback
+│   ├── cli/           # Slop gen, test gen, seeder CLIs
+│   ├── judge0/        # Judge0 sandboxed runner
+│   ├── seeds/         # Problem YAML specs
+│   └── supabase/      # SQL migrations
+└── docker-compose.yml # Judge0 CE services
 ```
 
-## Manual Commands
+## Seeding Problems
 
-Frontend:
-
-```sh
-cd frontend
-corepack pnpm install
-corepack pnpm dev
-```
-
-Backend with `uv`:
-
-```sh
+```bash
 cd backend
-uv sync
-uv run uvicorn main:app --reload
+python -m cli.seed_problem seeds/001_two_sum.yaml --dry-run
+python -m cli.seed_problem "seeds/*.yaml"
 ```
 
-Backend without `uv`:
+## Three-Tier Verdicts
 
-```sh
-cd backend
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
+| Verdict | Meaning |
+|---------|---------|
+| Pass    | All tests correct + complexity <= target |
+| Partial | All tests correct but complexity too high |
+| Fail    | At least one test case wrong |
 
-## Supabase Seed
+## Contributing
 
-Apply the schema in `backend/supabase/migrations/0001_init.sql`, then run
-`backend/supabase/seeds/0001_two_sum.sql` to insert the sprint-1 Two Sum
-problem. The seed uses the fixed UUID expected by the sprint-1 backend
-submission endpoint.
+1. Fork the repository
+2. Create a feature branch
+3. Open a pull request against `main`
 
-## Smoke Test
+## License
 
-1. Run `make install && make dev`.
-2. Open <http://localhost:3000> and confirm the landing page renders.
-3. Open <http://localhost:3000/login> and confirm the sign-in UI renders.
-4. Open <http://localhost:3000/problems> and confirm the problem browser renders.
-5. Open the seeded Two Sum problem and submit a known-good `two_sum` solution.
-6. Confirm the result banner shows `Passed`.
-
-## Quality Checks
-
-```sh
-make test
-```
-
-For a real Judge0 integration test, start Judge0 and run:
-
-```sh
-cd backend
-RUN_JUDGE0_INTEGRATION=1 python3 -m pytest
-```
+This is a class project. No license file is currently provided.

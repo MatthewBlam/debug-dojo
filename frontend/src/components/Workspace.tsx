@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import type { EditorProps } from "@monaco-editor/react";
 
 import { T } from "@/lib/tokens";
+import { supabase } from "@/lib/supabase";
 import { TopNav } from "@/components/TopNav";
 import { Tag } from "@/components/Tag";
 import { Difficulty, toDifficultyLevel } from "@/components/Difficulty";
@@ -27,12 +28,17 @@ export type WorkspaceProblem = {
   prompt?: string;
   expectedExamples?: { call: string; result: string }[];
   testCases?: { input: string; expected: string }[];
+  targetComplexity?: string | null;
 };
 
 export type SubmitResult = {
-  verdict: "pass" | "fail";
+  verdict: "pass" | "partial" | "fail";
   stdout: string;
-  testCaseResults?: { ok?: boolean; passed?: boolean }[];
+  cases_passed: number;
+  cases_total: number;
+  test_case_results: { passed: boolean; input: string | null; expected: string | null; actual: string | null }[];
+  submission_id?: string | null;
+  complexity_detected?: string | null;
 };
 
 type Tab = "description" | "hints" | "discussion" | "solutions";
@@ -105,10 +111,20 @@ export function Workspace({
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 10000);
 
+    let authHeaders: Record<string, string> = {};
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) {
+        authHeaders = { Authorization: `Bearer ${data.session.access_token}` };
+      }
+    } catch {
+      // No auth — continue without token
+    }
+
     try {
       const response = await fetch(`${apiBaseUrl}/api/v1/submissions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ problem_id: problem.id, code }),
         signal: controller.signal,
       });
@@ -128,6 +144,18 @@ export function Workspace({
       setIsBusy(false);
     }
   };
+
+  // Cmd+Enter / Ctrl+Enter → submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && !isBusy && problem) {
+        e.preventDefault();
+        callBackend("submit");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
 
   const handleReset = () => {
     setCode(originalCode);
@@ -272,6 +300,7 @@ export function Workspace({
             type="button"
             onClick={() => callBackend("submit")}
             disabled={disabled}
+            title="Submit fix (⌘↵)"
             style={{
               background: T.gold,
               color: T.bg,
@@ -573,7 +602,7 @@ export function Workspace({
               ) : consoleTab === "diagnostics" ? (
                 <DiagnosticsView result={result} runError={runError} />
               ) : (
-                <ConsoleView result={result} runError={runError} resultKind={resultKind} />
+                <ConsoleView result={result} runError={runError} resultKind={resultKind} problem={problem} />
               )}
             </div>
           </div>
@@ -587,10 +616,12 @@ function ConsoleView({
   result,
   runError,
   resultKind,
+  problem,
 }: {
   result: SubmitResult | null;
   runError: string | null;
   resultKind: ResultKind | null;
+  problem: WorkspaceProblem | null;
 }) {
   if (runError) {
     return <div style={{ color: T.red }}>{runError}</div>;
@@ -607,24 +638,114 @@ function ConsoleView({
       </>
     );
   }
+
+  const verdictColor =
+    result.verdict === "pass" ? T.sage : result.verdict === "partial" ? T.gold : T.red;
+  const verdictBg =
+    result.verdict === "pass" ? T.sageDim : result.verdict === "partial" ? T.goldDim : T.redDim;
+  const verdictLabel =
+    result.verdict === "pass" ? "Pass" : result.verdict === "partial" ? "Partial" : "Fail";
+  const verdictIcon =
+    result.verdict === "pass" ? "✓" : result.verdict === "partial" ? "⚠" : "✗";
+  const verdictDescription =
+    result.verdict === "pass"
+      ? resultKind === "submit"
+        ? "Submission accepted"
+        : "Output matches expected"
+      : result.verdict === "partial"
+        ? "Correct but suboptimal"
+        : resultKind === "submit"
+          ? "Submission failed"
+          : "Output did not match";
+
   return (
     <>
+      {/* Prominent verdict badge */}
       <div
+        role="status"
+        aria-label={`Verdict: ${verdictLabel}. ${result.cases_passed} of ${result.cases_total} cases passed.${result.complexity_detected ? ` Complexity detected: ${result.complexity_detected}.` : ""}`}
         style={{
-          color: result.verdict === "pass" ? T.sage : T.red,
-          marginBottom: 8,
-          fontFamily: T.sans,
-          fontSize: 12.5,
-          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "10px 14px",
+          background: verdictBg,
+          borderRadius: 8,
+          marginBottom: 10,
         }}
       >
-        {result.verdict === "pass"
-          ? resultKind === "submit"
-            ? "✓ All tests passed — submission accepted"
-            : "✓ Output matches expected"
-          : resultKind === "submit"
-            ? "✗ Submission failed — output did not match"
-            : "✗ Output did not match expected"}
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 28,
+            height: 28,
+            borderRadius: 6,
+            background: verdictColor,
+            color: T.bg,
+            fontSize: 14,
+            fontWeight: 700,
+            flexShrink: 0,
+          }}
+        >
+          {verdictIcon}
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: verdictColor,
+                fontFamily: T.sans,
+              }}
+            >
+              {verdictLabel}
+            </span>
+            <span
+              style={{
+                fontSize: 12,
+                color: T.textDim,
+                fontFamily: T.sans,
+              }}
+            >
+              {verdictDescription}
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              marginTop: 3,
+              fontSize: 12,
+              fontFamily: T.mono,
+              color: T.textDim,
+            }}
+          >
+            <span>
+              Cases: <span style={{ color: T.text, fontWeight: 500 }}>{result.cases_passed}/{result.cases_total}</span> passed
+            </span>
+            {(result.verdict === "pass" || result.verdict === "partial") && result.complexity_detected ? (
+              <span>
+                Complexity: <span style={{ color: T.text, fontWeight: 500 }}>{result.complexity_detected}</span> detected
+              </span>
+            ) : null}
+          </div>
+          {result.verdict === "partial" && problem?.targetComplexity ? (
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 11.5,
+                fontFamily: T.sans,
+                color: T.gold,
+              }}
+            >
+              Target: {problem.targetComplexity} — your solution is correct but could be more efficient
+            </div>
+          ) : null}
+        </div>
       </div>
       <div style={{ color: T.text }}>
         <span style={{ color: T.textMute }}>stdout</span>
@@ -650,7 +771,7 @@ function TestsView({
     );
   }
   const verdict = result?.verdict;
-  const perTestResults = result?.testCaseResults;
+  const perTestResults = result?.test_case_results;
   const hasPerTestResults = Array.isArray(perTestResults);
   const hasOnlyOverallVerdict = Boolean(result) && !hasPerTestResults;
 
@@ -664,7 +785,7 @@ function TestsView({
       {problem.testCases.map((tc, i) => {
         const perTest = perTestResults?.[i];
         const ok = hasPerTestResults
-          ? (perTest?.ok ?? perTest?.passed ?? null)
+          ? (perTest?.passed ?? null)
           : verdict === "pass"
             ? true
             : null;
@@ -752,11 +873,23 @@ function DiagnosticsView({
   return (
     <div>
       <div style={{ color: T.textMute, marginBottom: 4 }}>verdict</div>
-      <div style={{ color: result.verdict === "pass" ? T.sage : T.red, marginBottom: 12 }}>
+      <div style={{ color: result.verdict === "pass" ? T.sage : result.verdict === "partial" ? T.gold : T.red, marginBottom: 12 }}>
         {result.verdict}
       </div>
       <div style={{ color: T.textMute, marginBottom: 4 }}>raw stdout</div>
       <div style={{ color: T.text }}>{result.stdout || "(empty)"}</div>
+      {result.cases_total > 0 && (
+        <>
+          <div style={{ color: T.textMute, marginBottom: 4, marginTop: 12 }}>test cases</div>
+          <div style={{ color: T.text }}>{result.cases_passed} / {result.cases_total} passed</div>
+        </>
+      )}
+      {result.complexity_detected && (
+        <>
+          <div style={{ color: T.textMute, marginBottom: 4, marginTop: 12 }}>complexity detected</div>
+          <div style={{ color: T.text }}>{result.complexity_detected}</div>
+        </>
+      )}
     </div>
   );
 }

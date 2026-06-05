@@ -1,0 +1,19 @@
+title: "Reverse String"
+description: |
+  Write a function that reverses a string in-place. The input is given as a list
+  of characters. You must modify the input list directly (in-place) with O(1)
+  extra memory and return it.
+difficulty: "Easy"
+tags: ["strings", "two pointers"]
+function_signature: "def reverse_string(s: list[str]) -> list[str]"
+reference_solution: |
+  def reverse_string(s):
+      left, right = 0, len(s) - 1
+      while left < right:
+          s[left], s[right] = s[right], s[left]
+          left += 1
+          right -= 1
+      return s
+target_complexity: "O(n)"
+bug_category: "off-by-one"
+num_test_cases: 8

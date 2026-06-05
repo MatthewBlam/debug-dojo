@@ -1,0 +1,47 @@
+title: "Serialize and Deserialize Binary Tree"
+description: |
+  Design a function to serialize and deserialize a binary tree. The tree is
+  represented as a nested list where each node is `[value, left, right]` and
+  None represents an empty subtree.
+
+  Implement a function that takes an operation ("serialize" or "deserialize")
+  and data. For "serialize", data is a tree (nested list) and the function
+  returns a string. For "deserialize", data is a string and the function
+  returns the tree (nested list).
+
+  The function takes a list of `[operation, data]` pairs and returns a list of
+  results.
+
+  Example tree: `[1, [2, None, None], [3, [4, None, None], [5, None, None]]]`
+difficulty: "Hard"
+tags: ["trees", "recursion", "design"]
+function_signature: "def codec(operations: list[list]) -> list"
+reference_solution: |
+  def codec(operations):
+      import json
+
+      def serialize(node):
+          if node is None:
+              return "null"
+          val, left, right = node[0], node[1], node[2]
+          return json.dumps([val, json.loads(serialize(left)), json.loads(serialize(right))])
+
+      def deserialize(data):
+          parsed = json.loads(data)
+          if parsed is None:
+              return None
+          val, left, right = parsed[0], parsed[1], parsed[2]
+          left_node = deserialize(json.dumps(left)) if left is not None else None
+          right_node = deserialize(json.dumps(right)) if right is not None else None
+          return [val, left_node, right_node]
+
+      results = []
+      for op in operations:
+          if op[0] == "serialize":
+              results.append(serialize(op[1]))
+          elif op[0] == "deserialize":
+              results.append(deserialize(op[1]))
+      return results
+target_complexity: "O(n)"
+bug_category: "bad-variable"
+num_test_cases: 8

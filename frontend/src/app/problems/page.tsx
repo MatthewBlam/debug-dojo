@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { T, type DifficultyLevel } from "@/lib/tokens";
 import { TopNav } from "@/components/TopNav";
@@ -51,10 +52,33 @@ function bugCategoryToTag(raw: string | null): string {
 }
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [supabaseRows, setSupabaseRows] = useState<DisplayRow[] | null>(null);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+  const [difficulty, setDifficulty] = useState<DifficultyFilter>(
+    () => (searchParams.get("difficulty") as DifficultyFilter) || "all",
+  );
+  const [bugCategory, setBugCategory] = useState<"all" | string>(
+    () => searchParams.get("category") ?? "all",
+  );
+
+  const syncParams = useCallback(
+    (s: string, d: DifficultyFilter, cat: string) => {
+      const params = new URLSearchParams();
+      if (s) params.set("q", s);
+      if (d !== "all") params.set("difficulty", d);
+      if (cat !== "all") params.set("category", cat);
+      const qs = params.toString();
+      router.replace(qs ? `?${qs}` : "/problems");
+    },
+    [router],
+  );
+
+  useEffect(() => {
+    syncParams(search, difficulty, bugCategory);
+  }, [search, difficulty, bugCategory, syncParams]);
 
   useEffect(() => {
     let active = true;
@@ -102,17 +126,27 @@ export default function DashboardPage() {
     [supabaseRows],
   );
 
+  const bugCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of allRows) {
+      for (const t of r.tags) if (t) set.add(t);
+    }
+    return Array.from(set).sort();
+  }, [allRows]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return allRows.filter((r) => {
       if (difficulty !== "all" && r.difficulty !== difficulty) return false;
+      if (bugCategory !== "all" && !r.tags.includes(bugCategoryToTag(bugCategory)))
+        return false;
       if (!q) return true;
       return (
         r.title.toLowerCase().includes(q) ||
         r.tags.some((t) => t.toLowerCase().includes(q))
       );
     });
-  }, [allRows, search, difficulty]);
+  }, [allRows, search, difficulty, bugCategory]);
 
   const isLoadingList = supabaseRows === null;
   const stats = [
@@ -346,12 +380,39 @@ export default function DashboardPage() {
             </svg>
           </div>
 
-          {(search || difficulty !== "all") ? (
+          {bugCategories.map((cat) => {
+            const rawCat = cat.replace(/ /g, "_");
+            const isActive = bugCategory === rawCat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() =>
+                  setBugCategory((prev) => (prev === rawCat ? "all" : rawCat))
+                }
+                style={{
+                  padding: "5px 10px",
+                  fontSize: 11.5,
+                  background: isActive ? T.goldDim : "transparent",
+                  color: isActive ? T.gold : T.textDim,
+                  border: `1px solid ${isActive ? T.gold : T.line}`,
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  fontFamily: T.sans,
+                }}
+              >
+                {cat}
+              </button>
+            );
+          })}
+
+          {(search || difficulty !== "all" || bugCategory !== "all") ? (
             <button
               type="button"
               onClick={() => {
                 setSearch("");
                 setDifficulty("all");
+                setBugCategory("all");
               }}
               style={{
                 padding: "8px 12px",

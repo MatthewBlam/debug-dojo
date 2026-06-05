@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Lightweight pre-commit hook for secret scanning.
+#
+# To activate, run:
+#   git config core.hooksPath .githooks
+#
+# This hook scans staged files for patterns that commonly indicate
+# leaked secrets (API keys, private keys, service role keys, etc.).
+# If a match is found the commit is blocked.
+#
+# To bypass (for false positives), commit with:
+#   git commit --no-verify
+
+set -euo pipefail
+
+PATTERNS='(GEMINI_API_KEY\s*=\s*["\x27]?\w{10,}|SUPABASE_SERVICE_ROLE_KEY\s*=\s*["\x27]?\w{10,}|SUPABASE_URL\s*=\s*https?://\S+|sk-[a-zA-Z0-9]{20,}|-----BEGIN.*PRIVATE KEY)'
+
+# Only inspect added/modified files (-d excludes deleted files)
+STAGED_DIFF=$(git diff --cached --diff-filter=d -U0 2>/dev/null || true)
+
+if [ -z "$STAGED_DIFF" ]; then
+    exit 0
+fi
+
+if echo "$STAGED_DIFF" | grep -qEi "$PATTERNS"; then
+    echo ""
+    echo "============================================================"
+    echo "  ERROR: Potential secret detected in staged changes!"
+    echo "============================================================"
+    echo ""
+    echo "Matches found:"
+    echo "$STAGED_DIFF" | grep -Eni "$PATTERNS" | head -20
+    echo ""
+    echo "Review with:"
+    echo "  git diff --cached | grep -Ei '$PATTERNS'"
+    echo ""
+    echo "If this is a false positive, commit with:"
+    echo "  git commit --no-verify"
+    echo ""
+    exit 1
+fi

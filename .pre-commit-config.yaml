@@ -1,0 +1,13 @@
+# Pre-commit hooks configuration
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+# Docs: https://pre-commit.com/
+
+repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        # Exclude example env files (they contain variable names, not values)
+        exclude: \.env\.example$

@@ -57,6 +57,7 @@ export default function ProblemPage({
           tags,
           prompt:
             "The starter code compiles but produces wrong results. Find and fix the defect without changing the function signature.",
+          targetComplexity: data.target_complexity,
         });
       } catch {
         if (!active) return;

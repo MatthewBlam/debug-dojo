@@ -15,6 +15,7 @@ export type PracticeProblem = {
   prompt: string;
   starterCode: string;
   testCases: { input: string; expected: string }[];
+  targetComplexity?: string | null;
 };
 
 export const PRACTICE_PROBLEM: PracticeProblem = {
@@ -45,4 +46,5 @@ export const PRACTICE_PROBLEM: PracticeProblem = {
     { input: "[3, 3], target=6", expected: "[0, 1]" },
     { input: "[], target=0", expected: "[]" },
   ],
+  targetComplexity: "O(n)",
 };

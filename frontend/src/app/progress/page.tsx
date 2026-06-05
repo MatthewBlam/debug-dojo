@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { T } from "@/lib/tokens";
 import { TopNav } from "@/components/TopNav";
+import { useUser } from "@/lib/useUser";
 
 type DiffCounts = { easy: number; medium: number; hard: number };
 
@@ -15,40 +17,39 @@ const HEATMAP_SHADES = [
   "#d4a857",
 ];
 
-// Stable pseudo-random activity grid (16 weeks x 7 days). Used purely as a
-// visual placeholder until a real activity backend exists.
-const SEED_HEATMAP: number[][] = [
-  [0, 1, 0, 2, 1, 0, 0],
-  [1, 0, 1, 3, 2, 0, 1],
-  [0, 2, 1, 0, 1, 1, 2],
-  [2, 1, 2, 3, 1, 2, 1],
-  [1, 0, 1, 2, 2, 3, 1],
-  [0, 0, 1, 1, 0, 2, 1],
-  [1, 1, 3, 4, 2, 1, 0],
-  [2, 3, 3, 4, 4, 2, 1],
-  [1, 2, 2, 3, 3, 1, 2],
-  [3, 3, 4, 4, 3, 2, 2],
-  [2, 3, 3, 2, 4, 3, 1],
-  [3, 4, 4, 3, 3, 2, 3],
-  [2, 2, 3, 4, 3, 3, 2],
-  [3, 3, 4, 4, 4, 3, 2],
-  [2, 3, 3, 3, 4, 4, 3],
-  [4, 3, 4, 2, 4, 3, 4],
-];
+// Empty activity grid (16 weeks x 7 days). Will be wired to real submission
+// activity in a later phase.
+const EMPTY_HEATMAP: number[][] = Array.from({ length: 16 }, () =>
+  Array.from({ length: 7 }, () => 0),
+);
 
 const BUG_TYPES = [
-  { l: "Wrong condition", pct: 0.78, n: 8 },
-  { l: "Missing edge case", pct: 0.71, n: 6 },
-  { l: "Bad complexity", pct: 0.55, n: 4 },
-  { l: "State mutation", pct: 0.42, n: 3 },
-  { l: "Wrong data struct.", pct: 0.28, n: 2 },
-  { l: "Other", pct: 0.18, n: 1 },
+  { l: "Wrong condition", pct: 0, n: 0 },
+  { l: "Missing edge case", pct: 0, n: 0 },
+  { l: "Bad complexity", pct: 0, n: 0 },
+  { l: "State mutation", pct: 0, n: 0 },
+  { l: "Wrong data struct.", pct: 0, n: 0 },
+  { l: "Other", pct: 0, n: 0 },
 ];
 
+function formatJoinDate(isoDate: string): string {
+  const d = new Date(isoDate);
+  const month = d.toLocaleString("en-US", { month: "short" });
+  return `joined ${month} ${d.getFullYear()}`;
+}
+
 export default function ProgressPage() {
+  const { user, isLoading: authLoading } = useUser();
   const [counts, setCounts] = useState<DiffCounts>({ easy: 0, medium: 0, hard: 0 });
   const [totalProblems, setTotalProblems] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Derive identity fields from the auth user
+  const emailLocal = user?.email?.split("@")[0] ?? "";
+  const initials = emailLocal ? emailLocal[0].toUpperCase() : "?";
+  const displayName = emailLocal || "Guest";
+  const subtitle = user?.email ?? "";
+  const joinedLabel = user?.created_at ? formatJoinDate(user.created_at) : "";
 
   useEffect(() => {
     let active = true;
@@ -140,68 +141,126 @@ export default function ProgressPage() {
               gap: 16,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${T.gold}, ${T.red})`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: T.bg,
-                  fontWeight: 700,
-                  fontSize: 18,
-                  letterSpacing: -0.4,
-                }}
-              >
-                RM
-              </div>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: T.text, letterSpacing: -0.1 }}>
-                  Ren Morimoto
+            {authLoading ? (
+              /* Skeleton while auth resolves */
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: "50%",
+                      background: T.lineStrong,
+                    }}
+                  />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ width: 120, height: 14, borderRadius: 4, background: T.lineStrong }} />
+                    <div style={{ width: 80, height: 10, borderRadius: 4, background: T.lineSoft }} />
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: T.textMute, marginTop: 2 }}>
-                  @ren · joined Jan 2026
+                <div style={{ width: "100%", height: 48, borderRadius: 8, background: T.bg }} />
+              </>
+            ) : !user ? (
+              /* Guest / logged-out state */
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: "50%",
+                      background: T.lineStrong,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: T.textMute,
+                      fontWeight: 700,
+                      fontSize: 18,
+                      letterSpacing: -0.4,
+                    }}
+                  >
+                    ?
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: T.text, letterSpacing: -0.1 }}>
+                      Guest
+                    </div>
+                    <div style={{ fontSize: 12, color: T.textMute, marginTop: 2 }}>
+                      <Link href="/login" style={{ color: T.gold, textDecoration: "none" }}>
+                        Sign in
+                      </Link>{" "}
+                      to track your progress
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div
-              style={{
-                padding: "12px 14px",
-                background: T.bg,
-                border: `1px solid ${T.lineSoft}`,
-                borderRadius: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.sage }} />
-              <div>
-                <div style={{ fontSize: 12, color: T.textMute }}>Level</div>
-                <div style={{ fontSize: 14, color: T.text, fontWeight: 500 }}>Practitioner</div>
-              </div>
-              <div style={{ flex: 1 }} />
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 11, color: T.textMute, fontFamily: T.mono }}>0 / 2,000 xp</div>
+              </>
+            ) : (
+              /* Authenticated user */
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: "50%",
+                      background: `linear-gradient(135deg, ${T.gold}, ${T.red})`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: T.bg,
+                      fontWeight: 700,
+                      fontSize: 18,
+                      letterSpacing: -0.4,
+                    }}
+                  >
+                    {initials}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: T.text, letterSpacing: -0.1 }}>
+                      {displayName}
+                    </div>
+                    <div style={{ fontSize: 12, color: T.textMute, marginTop: 2 }}>
+                      {subtitle}{joinedLabel ? ` · ${joinedLabel}` : ""}
+                    </div>
+                  </div>
+                </div>
                 <div
                   style={{
-                    width: 110,
-                    height: 4,
-                    background: T.lineStrong,
-                    borderRadius: 2,
-                    marginTop: 4,
+                    padding: "12px 14px",
+                    background: T.bg,
+                    border: `1px solid ${T.lineSoft}`,
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
                   }}
                 >
-                  <div style={{ width: "0%", height: "100%", background: T.gold, borderRadius: 2 }} />
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.sage }} />
+                  <div>
+                    <div style={{ fontSize: 12, color: T.textMute }}>Level</div>
+                    <div style={{ fontSize: 14, color: T.text, fontWeight: 500 }}>Beginner</div>
+                  </div>
+                  <div style={{ flex: 1 }} />
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 11, color: T.textMute, fontFamily: T.mono }}>0 / 2,000 xp</div>
+                    <div
+                      style={{
+                        width: 110,
+                        height: 4,
+                        background: T.lineStrong,
+                        borderRadius: 2,
+                        marginTop: 4,
+                      }}
+                    >
+                      <div style={{ width: "0%", height: "100%", background: T.gold, borderRadius: 2 }} />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.55 }}>
-              Submit your first fix to start tracking your bug-hunting range across problem types.
-            </div>
+                <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.55 }}>
+                  Submit your first fix to start tracking your bug-hunting range across problem types.
+                </div>
+              </>
+            )}
           </div>
 
           <div
@@ -275,7 +334,7 @@ export default function ProgressPage() {
               <div>
                 <div style={{ fontSize: 14, color: T.text, fontWeight: 500 }}>Activity</div>
                 <div style={{ fontSize: 11.5, color: T.textMute, marginTop: 2 }}>
-                  Last 16 weeks — illustrative
+                  Last 16 weeks
                 </div>
               </div>
               <div
@@ -352,7 +411,7 @@ export default function ProgressPage() {
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 3 }}>
-                  {SEED_HEATMAP.map((week, wi) => (
+                  {EMPTY_HEATMAP.map((week, wi) => (
                     <div key={wi} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                       {week.map((v, di) => (
                         <div
@@ -364,7 +423,7 @@ export default function ProgressPage() {
                             background: HEATMAP_SHADES[v],
                             border: v === 0 ? `1px solid ${T.lineSoft}` : "none",
                             boxShadow:
-                              wi === SEED_HEATMAP.length - 1 && di === week.length - 1
+                              wi === EMPTY_HEATMAP.length - 1 && di === week.length - 1
                                 ? `0 0 0 1.5px ${T.text}`
                                 : "none",
                           }}

@@ -1,0 +1,21 @@
+title: "Flatten Nested List"
+description: |
+  Given an arbitrarily nested list of integers, return a flat list containing
+  all integers in the order they appear.
+
+  For example, `[1, [2, [3, 4], 5], 6]` should return `[1, 2, 3, 4, 5, 6]`.
+difficulty: "Medium"
+tags: ["recursion", "arrays"]
+function_signature: "def flatten(nested: list) -> list[int]"
+reference_solution: |
+  def flatten(nested):
+      result = []
+      for item in nested:
+          if isinstance(item, list):
+              result.extend(flatten(item))
+          else:
+              result.append(item)
+      return result
+target_complexity: "O(n)"
+bug_category: "missing-edge-case"
+num_test_cases: 8
