@@ -1,10 +1,12 @@
+short_id: "001"
 title: "Two Sum"
 description: |
   Given an array of integers `nums` and an integer `target`, return the indices
   of the two numbers such that they add up to `target`.
   You may assume each input has at most one valid answer, and you may not use
   the same element twice. Return an empty list if no pair exists.
-difficulty: "Easy"
+difficulty: "easy"
+bug_category: "bad_complexity"
 tags: ["arrays", "hash map"]
 function_signature: "def two_sum(nums: list[int], target: int) -> list[int]"
 reference_solution: |
@@ -15,6 +17,36 @@ reference_solution: |
               return [seen[target - n], i]
           seen[n] = i
       return []
+slop_code: |
+  def two_sum(nums, target):
+      for i in range(len(nums)):
+          for j in range(i + 1, len(nums)):
+              if nums[i] + nums[j] == target:
+                  return [i, j]
+      return []
 target_complexity: "O(n)"
-bug_category: "off-by-one"
-num_test_cases: 8
+test_cases:
+  - input:
+      nums: [2, 7, 11, 15]
+      target: 9
+    is_hidden: false
+  - input:
+      nums: [3, 2, 4]
+      target: 6
+    is_hidden: false
+  - input:
+      nums: [3, 3]
+      target: 6
+    is_hidden: false
+  - input:
+      nums: []
+      target: 0
+    is_hidden: true
+  - input:
+      nums: [-3, 4, 3, 90]
+      target: 0
+    is_hidden: true
+  - input:
+      nums: [1, 5, 1, 5]
+      target: 10
+    is_hidden: true

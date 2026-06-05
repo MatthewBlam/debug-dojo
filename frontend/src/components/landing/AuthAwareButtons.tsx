@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { T } from "@/lib/tokens";
 import { useUser, loginHref } from "@/lib/useUser";
 
-const APP_ENTRY = "/practice";
+const APP_ENTRY = "/problems";
 
 // Replaces the static "Sign in" link in the landing nav. Logged-out users go
 // to the existing sign-in flow (preserving the post-login redirect target);

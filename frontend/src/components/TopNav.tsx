@@ -8,12 +8,11 @@ import { useUser } from "@/lib/useUser";
 import { supabase } from "@/lib/supabase";
 import { BrandMark } from "./BrandMark";
 
-type NavKey = "Problems" | "Submissions" | "Leaderboard" | "Progress";
+type NavKey = "Problems" | "Submissions" | "Progress";
 
 const NAV: { label: NavKey; href: string }[] = [
   { label: "Problems", href: "/problems" },
   { label: "Submissions", href: "/submissions" },
-  { label: "Leaderboard", href: "/leaderboard" },
   { label: "Progress", href: "/progress" }
 ];
 
@@ -32,11 +31,9 @@ export function TopNav() {
 
   const active: NavKey | null = pathname?.startsWith("/progress")
     ? "Progress"
-    : pathname?.startsWith("/leaderboard")
-      ? "Leaderboard"
-      : pathname?.startsWith("/submissions")
+    : pathname?.startsWith("/submissions")
         ? "Submissions"
-        : pathname?.startsWith("/problems") || pathname?.startsWith("/practice")
+        : pathname?.startsWith("/problems")
           ? "Problems"
           : null;
 
@@ -81,10 +78,11 @@ export function TopNav() {
         <BrandMark size={36} />
         <span
           style={{
-            fontSize: 15,
-            fontWeight: 600,
+            fontFamily: T.serif,
+            fontStyle: "italic",
+            fontSize: 21,
+            fontWeight: 400,
             color: T.text,
-            letterSpacing: -0.1,
             whiteSpace: "nowrap"
           }}>
           Debug Dojo
@@ -141,28 +139,6 @@ export function TopNav() {
         </Link>
       ) : (
         <>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "5px 10px 5px 8px",
-              background: T.panel2,
-              borderRadius: 999,
-              fontSize: 12,
-              color: T.textDim
-            }}>
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
-              <path
-                d="M6.5 1.5C5 3.5 3 4.5 3 7a3.5 3.5 0 007 0c0-1.4-.7-2.5-1.5-3.5 0 1-.7 1.8-1.5 1.8.5-1.5 0-2.7-1.5-3.8z"
-                fill={T.gold}
-                fillOpacity="0.85"
-              />
-            </svg>
-            <span style={{ color: T.text, fontVariantNumeric: "tabular-nums" }}>0</span>
-            <span>day streak</span>
-          </div>
-
           <div ref={menuRef} style={{ position: "relative" }}>
             <button
               onClick={() => setMenuOpen((prev) => !prev)}

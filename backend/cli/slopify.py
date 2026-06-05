@@ -1,7 +1,11 @@
 """CLI tool to generate buggy ('slop') code from a reference solution.
 
 Usage:
-    python -m cli.slopify --solution "def two_sum(nums, target): ..." --signature "def two_sum(nums: list[int], target: int) -> list[int]" --bug-category off-by-one --difficulty Easy
+    python -m cli.slopify \
+      --solution "def two_sum(nums, target): ..." \
+      --signature "def two_sum(nums: list[int], target: int) -> list[int]" \
+      --bug-category off_by_one \
+      --difficulty easy
 
 Or read from a YAML problem spec:
     python -m cli.slopify --from-yaml seeds/001_two_sum.yaml
@@ -62,20 +66,20 @@ def _parse_args() -> argparse.Namespace:
         "--bug-category",
         type=str,
         choices=[
-            "off-by-one",
-            "wrong-operator",
-            "bad-variable",
-            "missing-edge-case",
-            "logic-inversion",
-            "bad-complexity",
+            "bad_complexity",
+            "off_by_one",
+            "wrong_base_case",
+            "missing_edge_case",
+            "subtle_logic_error",
+            "redundant_work",
         ],
         help="Type of bug to introduce",
     )
     parser.add_argument(
         "--difficulty",
         type=str,
-        default="Easy",
-        choices=["Easy", "Medium", "Hard"],
+        default="easy",
+        choices=["easy", "medium", "hard"],
         help="Problem difficulty level",
     )
     return parser.parse_args()
@@ -88,8 +92,8 @@ def main() -> None:
         spec = yaml.safe_load(Path(args.from_yaml).read_text())
         reference_solution = spec["reference_solution"]
         function_signature = spec["function_signature"]
-        bug_category = spec.get("bug_category", "off-by-one")
-        difficulty = spec.get("difficulty", "Easy")
+        bug_category = spec.get("bug_category", "off_by_one")
+        difficulty = spec.get("difficulty", "easy")
     elif args.solution and args.signature and args.bug_category:
         reference_solution = args.solution
         function_signature = args.signature

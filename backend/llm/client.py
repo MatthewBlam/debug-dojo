@@ -49,7 +49,7 @@ class GeminiClient:
                     timeout=timeout,
                 )
                 return response.text
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.error(
                     "Gemini call timed out after %.1fs (attempt %d/%d)",
                     timeout,

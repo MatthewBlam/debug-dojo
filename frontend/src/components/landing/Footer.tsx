@@ -33,7 +33,7 @@ export function Footer() {
             <Link href="/problems" style={footerLink}>
               Problems
             </Link>
-            <Link href="/practice" style={footerLink}>
+            <Link href="/problems" style={footerLink}>
               Demo
             </Link>
           </div>

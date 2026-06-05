@@ -1,6 +1,5 @@
 """Tests for the AST-based complexity analyzer."""
 
-import pytest
 
 from analysis.complexity import analyze_complexity, complexity_is_acceptable
 

@@ -36,7 +36,15 @@ export function LandingNav() {
               color: T.text
             }}>
             <BrandMark size={36} />
-            <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: -0.1 }}>Debug Dojo</span>
+            <span
+              style={{
+                fontFamily: T.serif,
+                fontStyle: "italic",
+                fontSize: 21,
+                fontWeight: 400
+              }}>
+              Debug Dojo
+            </span>
           </Link>
 
           <nav

@@ -10,7 +10,7 @@ export type WorkspaceProblem = {
   tags?: string[];
   prompt?: string;
   expectedExamples?: { call: string; result: string }[];
-  testCases?: { input: string; expected: string }[];
+  testCases?: { input: Record<string, unknown>; expected?: string }[];
   targetComplexity?: string | null;
 };
 
@@ -21,12 +21,14 @@ export type SubmitResult = {
   cases_total: number;
   test_case_results: {
     passed: boolean;
-    input: string | null;
+    input: Record<string, unknown> | null;
     expected: string | null;
     actual: string | null;
+    hidden?: boolean;
   }[];
   submission_id?: string | null;
   complexity_detected?: string | null;
+  feedback_card?: string | null;
 };
 
 export type ResultKind = "run" | "submit";

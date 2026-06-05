@@ -2,46 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { listSubmissions, type ApiSubmission } from "@/lib/api";
 import { T } from "@/lib/tokens";
 import { TopNav } from "@/components/TopNav";
 import { Tag } from "@/components/Tag";
 import { useUser, loginHref } from "@/lib/useUser";
 
-type SubmissionRowRaw = {
-  id: string;
-  verdict: string;
-  cases_passed: number;
-  cases_total: number;
-  complexity_detected: string | null;
-  created_at: string;
-  problem_id: string;
-  problems:
-    | { title: string; difficulty: string | null }[]
-    | { title: string; difficulty: string | null }
-    | null;
-};
-
-type SubmissionRow = {
-  id: string;
-  verdict: string;
-  cases_passed: number;
-  cases_total: number;
-  complexity_detected: string | null;
-  created_at: string;
-  problem_id: string;
-  problemTitle: string | null;
-};
-
 function verdictTone(v: string): "sage" | "gold" | "red" {
   if (v === "pass") return "sage";
   if (v === "partial") return "gold";
+  if (v === "pending") return "gold";
   return "red";
 }
 
 function verdictLabel(v: string): string {
   if (v === "pass") return "Pass";
   if (v === "partial") return "Partial";
+  if (v === "pending") return "Pending";
   return "Fail";
 }
 
@@ -61,48 +38,22 @@ function formatTimestamp(iso: string): string {
 
 export default function SubmissionsPage() {
   const { user, isLoading: authLoading } = useUser();
-  const [submissions, setSubmissions] = useState<SubmissionRow[] | null>(null);
+  const [submissions, setSubmissions] = useState<ApiSubmission[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading || !user) return;
     let active = true;
     void (async () => {
       try {
-        const { data, error: queryError } = await supabase
-          .from("submissions")
-          .select(
-            "id, verdict, cases_passed, cases_total, complexity_detected, created_at, problem_id, problems(title, difficulty)"
-          )
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(50);
-
+        const data = await listSubmissions();
         if (!active) return;
-        if (queryError) {
-          setError("Could not load submissions.");
-          setSubmissions([]);
-          return;
-        }
-        const raw = (data ?? []) as SubmissionRowRaw[];
-        setSubmissions(
-          raw.map((r) => {
-            const prob = Array.isArray(r.problems) ? r.problems[0] : r.problems;
-            return {
-              id: r.id,
-              verdict: r.verdict,
-              cases_passed: r.cases_passed,
-              cases_total: r.cases_total,
-              complexity_detected: r.complexity_detected,
-              created_at: r.created_at,
-              problem_id: r.problem_id,
-              problemTitle: prob?.title ?? null
-            };
-          })
-        );
+        setSubmissions(data);
+        setError(null);
       } catch {
         if (active) {
-          setError("Could not connect to Supabase.");
+          setError("Could not load submissions from the backend.");
           setSubmissions([]);
         }
       }
@@ -274,50 +225,102 @@ export default function SubmissionsPage() {
             </div>
           ) : (
             submissions.map((s, i) => (
-              <Link
+              <div
                 key={s.id}
-                href={`/problems/${s.problem_id}`}
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 100px 100px 140px",
-                  padding: "14px 20px",
-                  fontSize: 13.5,
-                  color: T.text,
                   borderBottom: i < submissions.length - 1 ? `1px solid ${T.lineSoft}` : "none",
-                  alignItems: "center",
-                  textDecoration: "none",
                   transition: "background 120ms ease"
                 }}
                 className="dd-sub-row">
-                <span
+                <button
+                  type="button"
+                  onClick={() => setExpanded((current) => (current === s.id ? null : s.id))}
                   style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 100px 100px 140px",
+                    width: "100%",
+                    padding: "14px 20px",
+                    fontSize: 13.5,
                     color: T.text,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis"
+                    alignItems: "center",
+                    background: "transparent",
+                    border: "none",
+                    textAlign: "left",
+                    fontFamily: T.sans,
+                    cursor: "pointer"
                   }}>
-                  {s.problemTitle ?? s.problem_id.slice(0, 8)}
-                </span>
-                <span>
-                  <Tag tone={verdictTone(s.verdict)}>{verdictLabel(s.verdict)}</Tag>
-                </span>
-                <span
-                  style={{
-                    fontFamily: T.mono,
-                    fontSize: 12,
-                    color: T.textDim,
-                    fontVariantNumeric: "tabular-nums"
-                  }}>
-                  {s.cases_passed}/{s.cases_total}
-                </span>
-                <span
-                  style={{
-                    fontSize: 12,
-                    color: T.textMute
-                  }}>
-                  {formatTimestamp(s.created_at)}
-                </span>
-              </Link>
+                  <span
+                    style={{
+                      color: T.text,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis"
+                    }}>
+                    {s.problem_title ?? s.problem_id.slice(0, 8)}
+                  </span>
+                  <span>
+                    <Tag tone={verdictTone(s.verdict)}>{verdictLabel(s.verdict)}</Tag>
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: T.mono,
+                      fontSize: 12,
+                      color: T.textDim,
+                      fontVariantNumeric: "tabular-nums"
+                    }}>
+                    {s.cases_passed}/{s.cases_total}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: T.textMute
+                    }}>
+                    {formatTimestamp(s.created_at)}
+                  </span>
+                </button>
+                {expanded === s.id ? (
+                  <div
+                    style={{
+                      padding: "0 20px 16px",
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto",
+                      gap: 18,
+                      alignItems: "start"
+                    }}>
+                    <div
+                      style={{
+                        padding: "12px 14px",
+                        background: T.bg,
+                        border: `1px solid ${T.lineSoft}`,
+                        borderRadius: 8,
+                        color: T.textDim,
+                        fontSize: 13,
+                        lineHeight: 1.55
+                      }}>
+                      {s.feedback_card ?? "Feedback is not available yet."}
+                      {s.complexity_detected ? (
+                        <div style={{ marginTop: 8, fontFamily: T.mono, fontSize: 12 }}>
+                          Complexity: <span style={{ color: T.text }}>{s.complexity_detected}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                    <Link
+                      href={`/problems/${s.problem_id}`}
+                      style={{
+                        padding: "8px 12px",
+                        fontSize: 12.5,
+                        background: T.panel2,
+                        color: T.text,
+                        border: `1px solid ${T.line}`,
+                        borderRadius: 8,
+                        textDecoration: "none",
+                        whiteSpace: "nowrap"
+                      }}>
+                      Open problem
+                    </Link>
+                  </div>
+                ) : null}
+              </div>
             ))
           )}
         </div>
@@ -328,7 +331,7 @@ export default function SubmissionsPage() {
       </div>
 
       <style>{`
-        a.dd-sub-row:hover { background: ${T.panel2}; }
+        .dd-sub-row:hover { background: ${T.panel2}; }
       `}</style>
     </div>
   );

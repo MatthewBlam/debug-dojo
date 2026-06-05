@@ -6,7 +6,6 @@ and recursive function calls.
 """
 
 import ast
-from typing import Optional
 
 # Ordered from best to worst complexity
 COMPLEXITY_ORDER = [
@@ -19,7 +18,7 @@ COMPLEXITY_ORDER = [
 ]
 
 
-def _complexity_rank(label: str) -> Optional[int]:
+def _complexity_rank(label: str) -> int | None:
     """Return the index in COMPLEXITY_ORDER, or None if unknown."""
     try:
         return COMPLEXITY_ORDER.index(label)
@@ -45,7 +44,7 @@ class _FunctionComplexityVisitor(ast.NodeVisitor):
         self.func_name = func_name
         self.loop_depth = 0
         self.max_loop_depth = 0
-        self.has_sort_at_depth: Optional[int] = None  # depth where sort was seen
+        self.has_sort_at_depth: int | None = None  # depth where sort was seen
         self.is_recursive = False
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -120,7 +119,7 @@ class _FunctionComplexityVisitor(ast.NodeVisitor):
 def analyze_complexity(code: str) -> str:
     """Analyze code and return estimated time complexity.
 
-    Returns one of: 'O(1)', 'O(log n)', 'O(n)', 'O(n log n)', 'O(n^2)', 'O(n^3)', 'recursive', 'unknown'
+    Returns a known complexity label, 'recursive', or 'unknown'.
     """
     try:
         tree = ast.parse(code)
