@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState, useCallback } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -72,21 +72,27 @@ function ProblemsContent() {
     () => searchParams.get("category") ?? "all",
   );
 
-  const syncParams = useCallback(
-    (s: string, d: DifficultyFilter, cat: string) => {
-      const params = new URLSearchParams();
-      if (s) params.set("q", s);
-      if (d !== "all") params.set("difficulty", d);
-      if (cat !== "all") params.set("category", cat);
-      const qs = params.toString();
-      router.replace(qs ? `?${qs}` : "/problems");
-    },
-    [router],
-  );
+  useEffect(() => {
+    const urlQ = searchParams.get("q") ?? "";
+    const urlD = (searchParams.get("difficulty") as DifficultyFilter) || "all";
+    const urlCat = searchParams.get("category") ?? "all";
+    if (urlQ !== search) setSearch(urlQ);
+    if (urlD !== difficulty) setDifficulty(urlD);
+    if (urlCat !== bugCategory) setBugCategory(urlCat);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   useEffect(() => {
-    syncParams(search, difficulty, bugCategory);
-  }, [search, difficulty, bugCategory, syncParams]);
+    const params = new URLSearchParams();
+    if (search) params.set("q", search);
+    if (difficulty !== "all") params.set("difficulty", difficulty);
+    if (bugCategory !== "all") params.set("category", bugCategory);
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next !== current) {
+      router.replace(next ? `?${next}` : "/problems");
+    }
+  }, [search, difficulty, bugCategory, searchParams, router]);
 
   useEffect(() => {
     let active = true;

@@ -71,6 +71,7 @@ export default function SubmissionsPage() {
           .select(
             "id, verdict, cases_passed, cases_total, complexity_detected, created_at, problem_id, problems(title, difficulty)",
           )
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(50);
 
