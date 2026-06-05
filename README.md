@@ -2,9 +2,12 @@
 
 **A coding-practice platform where developers fix deliberately buggy AI-generated Python code.**
 
-![Debug Dojo](frontend/public/logo.png)
+<img src="frontend/public/logo.png" alt="Debug Dojo" width="128">
 
-Debug Dojo turns debugging into short, repeatable drills. Each problem starts with a working-looking but flawed Python function. The user reads the prompt, fixes the function in a Monaco editor, runs visible tests for fast feedback, and submits against hidden tests for a final verdict. The backend judges both correctness and estimated time complexity.
+Debug Dojo turns debugging into short, repeatable drills. Each problem starts with a working-looking
+but flawed Python function. The user reads the prompt, fixes the function in a Monaco editor, runs
+visible tests for fast feedback, and submits against hidden tests for a final verdict. The backend
+judges both correctness and estimated time complexity.
 
 ## Table of Contents
 
@@ -35,7 +38,8 @@ Debug Dojo turns debugging into short, repeatable drills. Each problem starts wi
 
 ## What It Does
 
-Debug Dojo presents coding problems where the starter solution is intentionally flawed. The platform focuses on debugging skill rather than blank-page problem solving.
+Debug Dojo presents coding problems where the starter solution is intentionally flawed. The platform
+focuses on debugging skill rather than blank-page problem solving.
 
 Users can:
 
@@ -49,7 +53,9 @@ Users can:
 - View submission history.
 - View personal progress statistics.
 
-The platform currently targets Python function-style problems. The backend wraps the submitted function, executes it through Judge0, compares output against a reference solution, and then runs a static AST-based complexity estimate.
+The platform currently targets Python function-style problems. The backend wraps the submitted
+function, executes it through Judge0, compares output against a reference solution, and then runs a
+static AST-based complexity estimate.
 
 ## Feature Set
 
@@ -87,16 +93,16 @@ The platform currently targets Python function-style problems. The backend wraps
 
 ## Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | Next.js 16, React 19, TypeScript, Monaco Editor, Tailwind CSS, shadcn-style UI pieces |
-| Auth | Supabase Auth, GitHub OAuth, `@supabase/supabase-js` |
-| Backend | FastAPI, Python 3.12, Pydantic, httpx, PyJWT |
-| Database | Supabase Postgres with Row-Level Security |
-| Code execution | Judge0 CE through Docker Compose |
-| AI | Google Gemini 2.5 Flash |
-| Package managers | pnpm for frontend, uv or pip for backend |
-| CI | GitHub Actions |
+| Layer            | Technology                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| Frontend         | Next.js 16, React 19, TypeScript, Monaco Editor, Tailwind CSS, shadcn-style UI pieces |
+| Auth             | Supabase Auth, GitHub OAuth, `@supabase/supabase-js`                                  |
+| Backend          | FastAPI, Python 3.12, Pydantic, httpx, PyJWT                                          |
+| Database         | Supabase Postgres with Row-Level Security                                             |
+| Code execution   | Judge0 CE through Docker Compose                                                      |
+| AI               | Google Gemini 2.5 Flash                                                               |
+| Package managers | pnpm for frontend, uv or pip for backend                                              |
+| CI               | GitHub Actions                                                                        |
 
 ## Architecture
 
@@ -106,14 +112,16 @@ The platform currently targets Python function-style problems. The backend wraps
 
 ### Authentication Flow
 
-1. The browser creates a Supabase client from `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+1. The browser creates a Supabase client from `NEXT_PUBLIC_SUPABASE_URL` and
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 2. Users sign in with email/password or GitHub OAuth from `/login`.
 3. GitHub redirects back to `/auth/callback`.
 4. The callback page exchanges the OAuth code for a Supabase session.
 5. Frontend API calls that require auth attach `Authorization: Bearer <access_token>`.
 6. FastAPI validates the JWT with either:
    - `SUPABASE_JWT_SECRET` for HS256 tokens, or
-   - `SUPABASE_JWT_JWK_X`, `SUPABASE_JWT_JWK_Y`, and optionally `SUPABASE_JWT_JWK_KID` for ES256 tokens.
+   - `SUPABASE_JWT_JWK_X`, `SUPABASE_JWT_JWK_Y`, and optionally `SUPABASE_JWT_JWK_KID` for ES256
+     tokens.
 
 ### Problem Browsing Flow
 
@@ -153,11 +161,13 @@ The submit path is authenticated and persists a submission.
 2. FastAPI verifies the Supabase JWT.
 3. FastAPI inserts a `pending` row into `submissions`.
 4. FastAPI starts a background judging task.
-5. The frontend polls `GET /api/v1/submissions/{submission_id}` until the verdict is no longer `pending`.
+5. The frontend polls `GET /api/v1/submissions/{submission_id}` until the verdict is no longer
+   `pending`.
 6. The background task runs all visible and hidden test cases.
 7. If all cases pass, FastAPI analyzes complexity.
 8. FastAPI requests a Gemini feedback card.
-9. FastAPI updates the `submissions` row with verdict, case counts, complexity, hidden-safe test results, feedback, and `judged_at`.
+9. FastAPI updates the `submissions` row with verdict, case counts, complexity, hidden-safe test
+   results, feedback, and `judged_at`.
 
 ### Progress Flow
 
@@ -165,7 +175,8 @@ The submit path is authenticated and persists a submission.
 2. The frontend calls `GET /api/v1/progress/me`.
 3. FastAPI verifies the JWT.
 4. FastAPI reads published problems and the user's non-pending submissions.
-5. FastAPI derives solved problem count, attempts, pass/partial/fail counts, accuracy, difficulty breakdown, and bug-category breakdown.
+5. FastAPI derives solved problem count, attempts, pass/partial/fail counts, accuracy, difficulty
+   breakdown, and bug-category breakdown.
 
 ## Project Structure
 
@@ -252,7 +263,8 @@ There are example files in three places:
 - `backend/.env.example`
 - `frontend/.env.example`
 
-For local development, the backend reads `backend/.env`, while the frontend reads `frontend/.env.local`.
+For local development, the backend reads `backend/.env`, while the frontend reads
+`frontend/.env.local`.
 
 ### Backend Variables
 
@@ -262,17 +274,17 @@ Create `backend/.env`:
 cp backend/.env.example backend/.env
 ```
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `JUDGE0_URL` | Yes | Judge0 API base URL. Defaults to `http://127.0.0.1:2358`. |
-| `SUPABASE_URL` | Yes | Supabase project URL used by the backend service-role client. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service-role key. Keep this server-side only. |
-| `SUPABASE_JWT_SECRET` | Required for HS256 auth | JWT secret for validating Supabase access tokens. |
-| `SUPABASE_JWT_JWK_X` | Required for ES256 auth | ES256 public JWK x coordinate. |
-| `SUPABASE_JWT_JWK_Y` | Required for ES256 auth | ES256 public JWK y coordinate. |
-| `SUPABASE_JWT_JWK_KID` | Optional for ES256 auth | ES256 key id. |
-| `GEMINI_API_KEY` | Required for feedback and slop generation | Google Gemini API key. |
-| `CORS_ORIGINS` | Required in deployment | Comma-separated frontend origins allowed by FastAPI CORS. |
+| Variable                    | Required                                  | Purpose                                                       |
+| --------------------------- | ----------------------------------------- | ------------------------------------------------------------- |
+| `JUDGE0_URL`                | Yes                                       | Judge0 API base URL. Defaults to `http://127.0.0.1:2358`.     |
+| `SUPABASE_URL`              | Yes                                       | Supabase project URL used by the backend service-role client. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes                                       | Supabase service-role key. Keep this server-side only.        |
+| `SUPABASE_JWT_SECRET`       | Required for HS256 auth                   | JWT secret for validating Supabase access tokens.             |
+| `SUPABASE_JWT_JWK_X`        | Required for ES256 auth                   | ES256 public JWK x coordinate.                                |
+| `SUPABASE_JWT_JWK_Y`        | Required for ES256 auth                   | ES256 public JWK y coordinate.                                |
+| `SUPABASE_JWT_JWK_KID`      | Optional for ES256 auth                   | ES256 key id.                                                 |
+| `GEMINI_API_KEY`            | Required for feedback and slop generation | Google Gemini API key.                                        |
+| `CORS_ORIGINS`              | Required in deployment                    | Comma-separated frontend origins allowed by FastAPI CORS.     |
 
 If `CORS_ORIGINS` is empty, the backend allows these local origins:
 
@@ -297,11 +309,11 @@ Create `frontend/.env.local`:
 cp frontend/.env.example frontend/.env.local
 ```
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL exposed to the browser. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key exposed to the browser. |
-| `NEXT_PUBLIC_API_BASE_URL` | Yes | FastAPI base URL. Local default is `http://127.0.0.1:8000`. |
+| Variable                        | Required | Purpose                                                     |
+| ------------------------------- | -------- | ----------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase project URL exposed to the browser.                |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase anonymous key exposed to the browser.              |
+| `NEXT_PUBLIC_API_BASE_URL`      | Yes      | FastAPI base URL. Local default is `http://127.0.0.1:8000`. |
 
 For Vercel, `NEXT_PUBLIC_API_BASE_URL` must point to the deployed backend, not localhost.
 
@@ -335,7 +347,8 @@ Fill in Supabase, Gemini, and API values.
 
 Run `backend/supabase/migrations/0001_init.sql` against your Supabase database.
 
-You can apply it through the Supabase SQL editor or with the Supabase CLI if your local Supabase workflow is configured.
+You can apply it through the Supabase SQL editor or with the Supabase CLI if your local Supabase
+workflow is configured.
 
 ### 4. Start Judge0
 
@@ -406,10 +419,13 @@ It also creates enum types for:
 
 - `difficulty`: `easy`, `medium`, `hard`
 - `status`: `draft`, `reviewed`, `published`
-- `bug_category`: `bad_complexity`, `off_by_one`, `wrong_base_case`, `missing_edge_case`, `subtle_logic_error`, `redundant_work`
+- `bug_category`: `bad_complexity`, `off_by_one`, `wrong_base_case`, `missing_edge_case`,
+  `subtle_logic_error`, `redundant_work`
 - `submission_verdict`: `pending`, `pass`, `partial`, `fail`
 
-Row-Level Security is enabled on all public tables. Public problem reads are handled by the backend service-role client rather than direct browser queries. Users can read their own submissions and profiles. The service role can manage app data.
+Row-Level Security is enabled on all public tables. Public problem reads are handled by the backend
+service-role client rather than direct browser queries. Users can read their own submissions and
+profiles. The service role can manage app data.
 
 ### Required Supabase Values
 
@@ -425,7 +441,8 @@ In Supabase:
    - `SUPABASE_SERVICE_ROLE_KEY`
 5. Configure JWT verification values in the backend:
    - HS256 projects: use `SUPABASE_JWT_SECRET`.
-   - ES256 projects: use `SUPABASE_JWT_JWK_X`, `SUPABASE_JWT_JWK_Y`, and optionally `SUPABASE_JWT_JWK_KID`.
+   - ES256 projects: use `SUPABASE_JWT_JWK_X`, `SUPABASE_JWT_JWK_Y`, and optionally
+     `SUPABASE_JWT_JWK_KID`.
 
 Never expose `SUPABASE_SERVICE_ROLE_KEY` to the frontend.
 
@@ -477,7 +494,8 @@ In the GitHub OAuth app settings, the callback URL should point to Supabase, not
 https://<your-supabase-project-ref>.supabase.co/auth/v1/callback
 ```
 
-Supabase receives the provider callback and then redirects the browser to the allowed frontend callback URL.
+Supabase receives the provider callback and then redirects the browser to the allowed frontend
+callback URL.
 
 ## Judge0 Setup
 
@@ -508,7 +526,8 @@ Check health manually:
 curl http://127.0.0.1:2358/statuses
 ```
 
-Judge0 resource limits are configured in `judge0.conf`, including CPU time, wall time, memory, file size, and network disablement.
+Judge0 resource limits are configured in `judge0.conf`, including CPU time, wall time, memory, file
+size, and network disablement.
 
 ## Running the App
 
@@ -697,7 +716,8 @@ It does not return hidden test cases or the reference solution.
 
 #### `POST /api/v1/runs`
 
-Runs code against visible tests only. Does not require authentication and does not create a submission.
+Runs code against visible tests only. Does not require authentication and does not create a
+submission.
 
 Request:
 
@@ -860,7 +880,9 @@ Important columns:
 - `is_hidden`
 - `position`
 
-Expected outputs are not stored. The backend computes expected output by running the reference solution against the same input. This keeps problem authoring simpler and ensures expected output stays tied to the reference implementation.
+Expected outputs are not stored. The backend computes expected output by running the reference
+solution against the same input. This keeps problem authoring simpler and ensures expected output
+stays tied to the reference implementation.
 
 ### `submissions`
 
@@ -895,7 +917,8 @@ Important columns:
 
 ### Code Wrapping
 
-The backend extracts the function name from the stored function signature. It then wraps submitted code like this:
+The backend extracts the function name from the stored function signature. It then wraps submitted
+code like this:
 
 ```python
 import json, sys
@@ -921,12 +944,12 @@ For every test case:
 
 ### Verdict Rules
 
-| Verdict | Meaning |
-| --- | --- |
-| `pass` | All selected tests passed and detected complexity is acceptable for the target. |
-| `partial` | All selected tests passed, but detected complexity is worse than the target. |
-| `fail` | At least one selected test failed or execution failed. |
-| `pending` | Submission was created and background judging has not finished yet. |
+| Verdict   | Meaning                                                                         |
+| --------- | ------------------------------------------------------------------------------- |
+| `pass`    | All selected tests passed and detected complexity is acceptable for the target. |
+| `partial` | All selected tests passed, but detected complexity is worse than the target.    |
+| `fail`    | At least one selected test failed or execution failed.                          |
+| `pending` | Submission was created and background judging has not finished yet.             |
 
 ### Complexity Analysis
 
@@ -957,7 +980,8 @@ O(n^3)
 
 ### Rate Limiting
 
-The backend uses an in-memory rate limiter. In `main.py`, run and submit endpoints are limited to 20 requests per 60 seconds per user or anonymous IP-derived key.
+The backend uses an in-memory rate limiter. In `main.py`, run and submit endpoints are limited to 20
+requests per 60 seconds per user or anonymous IP-derived key.
 
 This limiter is process-local. For a multi-instance deployment, use an external store such as Redis.
 
@@ -1058,9 +1082,12 @@ Debug Dojo uses Gemini in two places:
    - Uses `backend/prompts/slop_gen.txt`.
 2. `backend/llm/feedback.py`
    - Generates a short feedback card after a saved submission is judged.
-   - The prompt includes title, difficulty, verdict, detected complexity, target complexity, and case counts.
+   - The prompt includes title, difficulty, verdict, detected complexity, target complexity, and
+     case counts.
 
-If Gemini feedback generation fails during submission judging, the backend catches the error and stores deterministic fallback feedback instead. A Gemini outage should not prevent a submission from receiving a final verdict.
+If Gemini feedback generation fails during submission judging, the backend catches the error and
+stores deterministic fallback feedback instead. A Gemini outage should not prevent a submission from
+receiving a final verdict.
 
 ## Deployment Notes
 
@@ -1147,12 +1174,16 @@ CORS_ORIGINS=https://debug-dojo-nine.vercel.app,http://localhost:3000
 - Never commit real `.env` files.
 - Never expose `SUPABASE_SERVICE_ROLE_KEY` to browser code.
 - The frontend should only use `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-- Authenticated backend endpoints verify Supabase JWTs before reading user-specific submissions or progress.
+- Authenticated backend endpoints verify Supabase JWTs before reading user-specific submissions or
+  progress.
 - Supabase RLS is enabled on all public tables.
 - Hidden test inputs and outputs are not exposed in submission responses.
-- Judge0 runs submitted code in a sandboxed execution service with network disabled in `judge0.conf`.
-- The local rate limiter is in-memory and should be replaced or backed by shared storage if the backend is horizontally scaled.
-- The repo includes a `.githooks/pre-commit` secret scan and a `.secrets.baseline` for detect-secrets.
+- Judge0 runs submitted code in a sandboxed execution service with network disabled in
+  `judge0.conf`.
+- The local rate limiter is in-memory and should be replaced or backed by shared storage if the
+  backend is horizontally scaled.
+- The repo includes a `.githooks/pre-commit` secret scan and a `.secrets.baseline` for
+  detect-secrets.
 
 ## Troubleshooting
 
@@ -1228,7 +1259,8 @@ The seed CLI validates that:
 - the slop code does not pass all tests
 - Judge0 can execute the wrappers
 
-If the reference fails, fix the seed. If Judge0 is the issue, start Judge0 or use `--skip-validation` temporarily.
+If the reference fails, fix the seed. If Judge0 is the issue, start Judge0 or use
+`--skip-validation` temporarily.
 
 ## Contributing
 
