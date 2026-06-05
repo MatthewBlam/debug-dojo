@@ -7,7 +7,7 @@
 Debug Dojo turns debugging into short, repeatable drills. Each problem starts with a working-looking
 but flawed Python function. The user reads the prompt, fixes the function in a Monaco editor, runs
 visible tests for fast feedback, and submits against hidden tests for a final verdict. The backend
-judges both correctness and estimated time complexity.
+judges both correctness and estimated time complexity!
 
 ## Quick Start
 
