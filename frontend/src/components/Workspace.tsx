@@ -31,8 +31,8 @@ type ConsoleTab = "console" | "tests" | "diagnostics";
 
 const TABS: { key: Tab; label: string; badge?: string; locked?: boolean }[] = [
   { key: "description", label: "Description" },
-  { key: "hints", label: "Hints", badge: "3" },
-  { key: "discussion", label: "Discussion", badge: "128" },
+  { key: "hints", label: "Hints" },
+  { key: "discussion", label: "Discussion" },
   { key: "solutions", label: "Solutions", locked: true }
 ];
 
