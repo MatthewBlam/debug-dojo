@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { Suspense, useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -52,6 +52,14 @@ function bugCategoryToTag(raw: string | null): string {
 }
 
 export default function DashboardPage() {
+  return (
+    <Suspense>
+      <ProblemsContent />
+    </Suspense>
+  );
+}
+
+function ProblemsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [supabaseRows, setSupabaseRows] = useState<DisplayRow[] | null>(null);
