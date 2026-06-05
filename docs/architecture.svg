@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1100" viewBox="0 0 2048 1100" role="img" aria-labelledby="title desc">
+  <title id="title">Debug Dojo architecture diagram</title>
+  <desc id="desc">A system architecture diagram showing the browser, Next.js frontend, FastAPI backend, developer seeding CLI, Supabase, Judge0, and Google Gemini integrations.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#11131d"/>
+    </marker>
+    <style>
+      .page { fill: #ffffff; }
+      .zone { fill: #f8f8fb; stroke: #303242; stroke-width: 2.4; }
+      .box { fill: #ffffff; stroke: #303242; stroke-width: 2.4; }
+      .soft { fill: #f7f7fb; stroke: #303242; stroke-width: 2.4; }
+      .line { fill: none; stroke: #11131d; stroke-width: 2.4; marker-end: url(#arrow); }
+      .line-plain { fill: none; stroke: #11131d; stroke-width: 2.4; }
+      .label-bg { fill: #d7d7d7; opacity: 0.9; }
+      .title { font: 700 15px Arial, sans-serif; fill: #242635; }
+      .text { font: 600 14px Arial, sans-serif; fill: #3a3b50; }
+      .small { font: 600 13px Arial, sans-serif; fill: #3a3b50; }
+      .label { font: 700 13px Arial, sans-serif; fill: #38394a; }
+    </style>
+  </defs>
+
+  <rect class="page" x="0" y="0" width="2048" height="1100"/>
+
+  <!-- Browser -->
+  <rect class="zone" x="520" y="8" width="145" height="96"/>
+  <text class="title" x="592" y="23" text-anchor="middle">Browser</text>
+  <rect class="soft" x="557" y="35" width="72" height="45" rx="24"/>
+  <text class="text" x="593" y="62" text-anchor="middle">User</text>
+  <path class="line" d="M 592 80 L 592 163"/>
+  <rect class="label-bg" x="539" y="130" width="108" height="21"/>
+  <text class="label" x="593" y="145" text-anchor="middle">HTTP / browser</text>
+
+  <!-- Frontend -->
+  <rect class="zone" x="412" y="175" width="333" height="635"/>
+  <text class="title" x="579" y="191" text-anchor="middle">Frontend - Next.js 16 (App Router)</text>
+
+  <rect class="box" x="475" y="200" width="235" height="110"/>
+  <text class="title" x="592" y="229" text-anchor="middle">Pages</text>
+  <text class="text" x="592" y="251" text-anchor="middle">/ - /login - /problems</text>
+  <text class="text" x="592" y="272" text-anchor="middle">/problems/[id]</text>
+  <text class="text" x="592" y="293" text-anchor="middle">/submissions - /progress</text>
+
+  <rect class="box" x="448" y="458" width="234" height="89"/>
+  <text class="title" x="565" y="487" text-anchor="middle">Components</text>
+  <text class="text" x="565" y="508" text-anchor="middle">TopNav - Workspace -</text>
+  <text class="text" x="565" y="529" text-anchor="middle">Monaco Editor</text>
+
+  <rect class="box" x="455" y="696" width="220" height="68"/>
+  <text class="title" x="565" y="724" text-anchor="middle">Lib</text>
+  <text class="text" x="565" y="746" text-anchor="middle">Hooks - Utils - Auth tokens</text>
+
+  <path class="line" d="M 578 310 C 565 350 565 405 565 456"/>
+  <path class="line" d="M 565 547 L 565 694"/>
+  <path class="line" d="M 565 696 L 565 550"/>
+
+  <!-- Backend -->
+  <rect class="zone" x="765" y="380" width="1275" height="430"/>
+  <text class="title" x="1400" y="397" text-anchor="middle">Backend - FastAPI (Python 3.12)</text>
+
+  <rect class="box" x="1293" y="405" width="216" height="196"/>
+  <text class="title" x="1401" y="436" text-anchor="middle">REST API</text>
+  <text class="text" x="1401" y="456" text-anchor="middle">GET /api/v1/problems</text>
+  <text class="text" x="1401" y="478" text-anchor="middle">GET /api/v1/problems/:id</text>
+  <text class="text" x="1401" y="500" text-anchor="middle">POST /api/v1/runs</text>
+  <text class="text" x="1401" y="522" text-anchor="middle">POST</text>
+  <text class="text" x="1401" y="544" text-anchor="middle">/api/v1/submissions</text>
+  <text class="text" x="1401" y="566" text-anchor="middle">GET /api/v1/submissions</text>
+  <text class="text" x="1401" y="588" text-anchor="middle">GET /api/v1/progress/me</text>
+
+  <rect class="box" x="799" y="696" width="137" height="67"/>
+  <text class="title" x="868" y="725" text-anchor="middle">auth.py</text>
+  <text class="text" x="868" y="746" text-anchor="middle">JWT validation</text>
+
+  <rect class="box" x="986" y="696" width="155" height="67"/>
+  <text class="title" x="1064" y="725" text-anchor="middle">rate_limit.py</text>
+  <text class="text" x="1064" y="746" text-anchor="middle">per-user throttle</text>
+
+  <rect class="box" x="1192" y="696" width="197" height="67"/>
+  <text class="title" x="1291" y="725" text-anchor="middle">analysis/complexity.py</text>
+  <text class="text" x="1291" y="746" text-anchor="middle">AST Big-O checker</text>
+
+  <rect class="box" x="1438" y="696" width="144" height="67"/>
+  <text class="title" x="1510" y="725" text-anchor="middle">db/client.py</text>
+  <text class="text" x="1510" y="746" text-anchor="middle">Supabase client</text>
+
+  <rect class="box" x="1632" y="696" width="148" height="67"/>
+  <text class="title" x="1706" y="725" text-anchor="middle">judge0/client.py</text>
+  <text class="text" x="1706" y="746" text-anchor="middle">Sandbox runner</text>
+
+  <rect class="box" x="1830" y="696" width="162" height="67"/>
+  <text class="title" x="1911" y="725" text-anchor="middle">llm/feedback.py</text>
+  <text class="text" x="1911" y="746" text-anchor="middle">Feedback card gen</text>
+
+  <!-- Frontend to backend -->
+  <path class="line" d="M 625 312 C 655 358 840 389 1291 487"/>
+  <rect class="label-bg" x="607" y="335" width="69" height="21"/>
+  <text class="label" x="642" y="350" text-anchor="middle">REST calls</text>
+
+  <!-- Backend API to modules -->
+  <path class="line" d="M 1293 530 C 1120 570 868 595 868 694"/>
+  <path class="line" d="M 1293 527 C 1180 580 1064 595 1064 694"/>
+  <path class="line" d="M 1294 556 C 1291 610 1291 645 1291 694"/>
+  <path class="line" d="M 1463 601 C 1510 625 1510 655 1510 694"/>
+  <path class="line" d="M 1509 526 C 1605 575 1706 595 1706 694"/>
+  <path class="line" d="M 1509 526 C 1725 575 1911 595 1911 694"/>
+
+  <!-- External services -->
+  <rect class="zone" x="493" y="902" width="1520" height="176"/>
+  <text class="title" x="1256" y="918" text-anchor="middle">External Services</text>
+
+  <path class="box" d="M 529 943 C 529 924 656 924 656 943 L 656 1033 C 656 1052 529 1052 529 1033 Z"/>
+  <ellipse cx="592.5" cy="943" rx="63.5" ry="20" fill="#ffffff" stroke="#303242" stroke-width="2.4"/>
+  <text class="text" x="592" y="982" text-anchor="middle">Supabase</text>
+  <text class="text" x="592" y="1004" text-anchor="middle">Postgres + RLS</text>
+  <text class="text" x="592" y="1026" text-anchor="middle">Auth</text>
+
+  <rect class="box" x="1642" y="946" width="130" height="88"/>
+  <text class="title" x="1707" y="974" text-anchor="middle">Judge0 CE</text>
+  <text class="text" x="1707" y="995" text-anchor="middle">(Docker)</text>
+  <text class="text" x="1707" y="1016" text-anchor="middle">Code Sandbox</text>
+
+  <rect class="box" x="1845" y="946" width="132" height="88"/>
+  <text class="title" x="1911" y="974" text-anchor="middle">Google Gemini</text>
+  <text class="text" x="1911" y="995" text-anchor="middle">2.5 Flash</text>
+  <text class="text" x="1911" y="1016" text-anchor="middle">AI / Slop Gen</text>
+
+  <path class="line" d="M 565 764 L 565 926"/>
+  <rect class="label-bg" x="507" y="838" width="116" height="31"/>
+  <text class="label" x="565" y="852" text-anchor="middle">Supabase JS SDK</text>
+  <text class="label" x="565" y="867" text-anchor="middle">(auth only)</text>
+
+  <path class="line" d="M 1510 763 L 1510 900 L 656 984"/>
+  <rect class="label-bg" x="1452" y="847" width="119" height="21"/>
+  <text class="label" x="1511" y="862" text-anchor="middle">Postgres queries</text>
+
+  <path class="line" d="M 1706 763 L 1706 944"/>
+  <rect class="label-bg" x="1688" y="847" width="44" height="21"/>
+  <text class="label" x="1710" y="862" text-anchor="middle">HTTP</text>
+
+  <path class="line" d="M 1911 763 L 1911 944"/>
+  <rect class="label-bg" x="1875" y="847" width="74" height="21"/>
+  <text class="label" x="1912" y="862" text-anchor="middle">Gemini API</text>
+
+  <!-- Dev / seeding CLI -->
+  <rect class="zone" x="8" y="650" width="385" height="428"/>
+  <text class="title" x="200" y="666" text-anchor="middle">Dev / Seeding CLI</text>
+
+  <rect class="box" x="140" y="675" width="130" height="110"/>
+  <text class="title" x="205" y="711" text-anchor="middle">cli/</text>
+  <text class="text" x="205" y="735" text-anchor="middle">seed_problem</text>
+  <text class="text" x="205" y="759" text-anchor="middle">gen_slop</text>
+  <text class="text" x="205" y="783" text-anchor="middle">gen_tests</text>
+
+  <rect class="box" x="43" y="956" width="180" height="67"/>
+  <text class="title" x="133" y="985" text-anchor="middle">seeds/</text>
+  <text class="text" x="133" y="1006" text-anchor="middle">*.yaml problem specs</text>
+
+  <path class="line" d="M 140 785 C 112 810 133 875 133 954"/>
+  <path class="line" d="M 205 785 L 205 888 C 205 902 219 902 232 906 L 529 984"/>
+  <rect class="label-bg" x="153" y="847" width="103" height="21"/>
+  <text class="label" x="205" y="862" text-anchor="middle">seed problems</text>
+
+  <path class="line" d="M 270 785 C 324 810 294 864 329 873 L 1843 991"/>
+  <rect class="label-bg" x="276" y="847" width="96" height="21"/>
+  <text class="label" x="324" y="862" text-anchor="middle">generate slop</text>
+</svg>
