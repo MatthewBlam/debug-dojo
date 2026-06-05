@@ -87,17 +87,27 @@ async def _seed_one(spec_path: Path, *, dry_run: bool = False) -> dict[str, Any]
     problem_id = rows[0]["id"]
     print(f"  Problem inserted: {problem_id}")
 
-    # Insert test cases
     tc_rows = [
         {
             "problem_id": problem_id,
             "input": tc["input"],
             "expected_output": tc["expected_output"],
-            "is_hidden": i >= 3,  # First 3 visible, rest hidden
+            "is_hidden": i >= 3,
         }
         for i, tc in enumerate(test_cases)
     ]
-    sb.table("test_cases").insert(tc_rows).execute()
+    try:
+        sb.table("test_cases").insert(tc_rows).execute()
+    except Exception as exc:
+        print(f"  ERROR: Test case insert failed: {exc}", file=sys.stderr)
+        print(f"  Rolling back problem {problem_id}...", file=sys.stderr)
+        try:
+            sb.table("problems").delete().eq("id", problem_id).execute()
+            print(f"  Rolled back problem {problem_id}", file=sys.stderr)
+        except Exception as rollback_exc:
+            print(f"  ERROR: Rollback also failed: {rollback_exc}", file=sys.stderr)
+        raise
+
     print(f"  Inserted {len(tc_rows)} test cases ({min(3, len(tc_rows))} visible, {max(0, len(tc_rows)-3)} hidden)")
 
     return {"problem_id": problem_id, "title": title}

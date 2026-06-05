@@ -21,19 +21,10 @@ reference_solution: |
       import json
 
       def serialize(node):
-          if node is None:
-              return "null"
-          val, left, right = node[0], node[1], node[2]
-          return json.dumps([val, json.loads(serialize(left)), json.loads(serialize(right))])
+          return json.dumps(node)
 
       def deserialize(data):
-          parsed = json.loads(data)
-          if parsed is None:
-              return None
-          val, left, right = parsed[0], parsed[1], parsed[2]
-          left_node = deserialize(json.dumps(left)) if left is not None else None
-          right_node = deserialize(json.dumps(right)) if right is not None else None
-          return [val, left_node, right_node]
+          return json.loads(data)
 
       results = []
       for op in operations:

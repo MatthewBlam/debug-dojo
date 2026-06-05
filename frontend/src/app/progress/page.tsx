@@ -14,13 +14,13 @@ const HEATMAP_SHADES = [
   "rgba(212,168,87,0.16)",
   "rgba(212,168,87,0.36)",
   "rgba(212,168,87,0.6)",
-  "#d4a857",
+  "#d4a857"
 ];
 
 // Empty activity grid (16 weeks x 7 days). Will be wired to real submission
 // activity in a later phase.
 const EMPTY_HEATMAP: number[][] = Array.from({ length: 16 }, () =>
-  Array.from({ length: 7 }, () => 0),
+  Array.from({ length: 7 }, () => 0)
 );
 
 const BUG_TYPES = [
@@ -29,7 +29,7 @@ const BUG_TYPES = [
   { l: "Bad complexity", pct: 0, n: 0 },
   { l: "State mutation", pct: 0, n: 0 },
   { l: "Wrong data struct.", pct: 0, n: 0 },
-  { l: "Other", pct: 0, n: 0 },
+  { l: "Other", pct: 0, n: 0 }
 ];
 
 function formatJoinDate(isoDate: string): string {
@@ -55,9 +55,7 @@ export default function ProgressPage() {
     let active = true;
     void (async () => {
       try {
-        const { data, error: queryError } = await supabase
-          .from("problems")
-          .select("difficulty");
+        const { data, error: queryError } = await supabase.from("problems").select("difficulty");
         if (!active) return;
         if (queryError) throw queryError;
 
@@ -88,21 +86,41 @@ export default function ProgressPage() {
   const diffStats = [
     { l: "Easy", solved: 0, total: counts.easy, color: T.sage },
     { l: "Medium", solved: 0, total: counts.medium, color: T.gold },
-    { l: "Hard", solved: 0, total: counts.hard, color: T.red },
+    { l: "Hard", solved: 0, total: counts.hard, color: T.red }
   ];
 
   const tiles = [
-    { l: "Problems solved", v: "0", s: `/ ${totalProblems}`, trend: "Get started today", tone: T.text },
+    {
+      l: "Problems solved",
+      v: "0",
+      s: `/ ${totalProblems}`,
+      trend: "Get started today",
+      tone: T.text
+    },
     { l: "Current streak", v: "0", s: "days", trend: "Build the habit", tone: T.gold },
     { l: "Accuracy", v: "—", s: "%", trend: "No submissions yet", tone: T.sage },
-    { l: "Avg. time to fix", v: "—", s: "min", trend: "—", tone: T.text },
+    { l: "Avg. time to fix", v: "—", s: "min", trend: "—", tone: T.text }
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh", background: T.bg, color: T.text }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100dvh",
+        background: T.bg,
+        color: T.text
+      }}>
       <TopNav />
 
-      <div style={{ flex: 1, padding: "32px clamp(20px, 4vw, 48px)", maxWidth: 1440, width: "100%", margin: "0 auto" }}>
+      <div
+        style={{
+          flex: 1,
+          padding: "32px clamp(20px, 4vw, 48px)",
+          maxWidth: 1440,
+          width: "100%",
+          margin: "0 auto"
+        }}>
         {error ? (
           <div
             role="alert"
@@ -113,9 +131,8 @@ export default function ProgressPage() {
               border: `1px solid ${T.red}`,
               borderRadius: 8,
               color: T.text,
-              fontSize: 13,
-            }}
-          >
+              fontSize: 13
+            }}>
             {error}
           </div>
         ) : null}
@@ -126,10 +143,9 @@ export default function ProgressPage() {
             display: "grid",
             gridTemplateColumns: "minmax(280px, 320px) 1fr",
             gap: 24,
-            marginBottom: 28,
+            marginBottom: 28
           }}
-          className="dd-progress-top"
-        >
+          className="dd-progress-top">
           <div
             style={{
               background: T.panel,
@@ -138,9 +154,8 @@ export default function ProgressPage() {
               padding: "22px",
               display: "flex",
               flexDirection: "column",
-              gap: 16,
-            }}
-          >
+              gap: 16
+            }}>
             {authLoading ? (
               /* Skeleton while auth resolves */
               <>
@@ -150,12 +165,16 @@ export default function ProgressPage() {
                       width: 52,
                       height: 52,
                       borderRadius: "50%",
-                      background: T.lineStrong,
+                      background: T.lineStrong
                     }}
                   />
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    <div style={{ width: 120, height: 14, borderRadius: 4, background: T.lineStrong }} />
-                    <div style={{ width: 80, height: 10, borderRadius: 4, background: T.lineSoft }} />
+                    <div
+                      style={{ width: 120, height: 14, borderRadius: 4, background: T.lineStrong }}
+                    />
+                    <div
+                      style={{ width: 80, height: 10, borderRadius: 4, background: T.lineSoft }}
+                    />
                   </div>
                 </div>
                 <div style={{ width: "100%", height: 48, borderRadius: 8, background: T.bg }} />
@@ -176,13 +195,13 @@ export default function ProgressPage() {
                       color: T.textMute,
                       fontWeight: 700,
                       fontSize: 18,
-                      letterSpacing: -0.4,
-                    }}
-                  >
+                      letterSpacing: -0.4
+                    }}>
                     ?
                   </div>
                   <div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: T.text, letterSpacing: -0.1 }}>
+                    <div
+                      style={{ fontSize: 16, fontWeight: 600, color: T.text, letterSpacing: -0.1 }}>
                       Guest
                     </div>
                     <div style={{ fontSize: 12, color: T.textMute, marginTop: 2 }}>
@@ -210,17 +229,18 @@ export default function ProgressPage() {
                       color: T.bg,
                       fontWeight: 700,
                       fontSize: 18,
-                      letterSpacing: -0.4,
-                    }}
-                  >
+                      letterSpacing: -0.4
+                    }}>
                     {initials}
                   </div>
                   <div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: T.text, letterSpacing: -0.1 }}>
+                    <div
+                      style={{ fontSize: 16, fontWeight: 600, color: T.text, letterSpacing: -0.1 }}>
                       {displayName}
                     </div>
                     <div style={{ fontSize: 12, color: T.textMute, marginTop: 2 }}>
-                      {subtitle}{joinedLabel ? ` · ${joinedLabel}` : ""}
+                      {subtitle}
+                      {joinedLabel ? ` · ${joinedLabel}` : ""}
                     </div>
                   </div>
                 </div>
@@ -232,9 +252,8 @@ export default function ProgressPage() {
                     borderRadius: 8,
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
-                  }}
-                >
+                    gap: 12
+                  }}>
                   <span style={{ width: 8, height: 8, borderRadius: "50%", background: T.sage }} />
                   <div>
                     <div style={{ fontSize: 12, color: T.textMute }}>Level</div>
@@ -242,22 +261,26 @@ export default function ProgressPage() {
                   </div>
                   <div style={{ flex: 1 }} />
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 11, color: T.textMute, fontFamily: T.mono }}>0 / 2,000 xp</div>
+                    <div style={{ fontSize: 11, color: T.textMute, fontFamily: T.mono }}>
+                      0 / 2,000 xp
+                    </div>
                     <div
                       style={{
                         width: 110,
                         height: 4,
                         background: T.lineStrong,
                         borderRadius: 2,
-                        marginTop: 4,
-                      }}
-                    >
-                      <div style={{ width: "0%", height: "100%", background: T.gold, borderRadius: 2 }} />
+                        marginTop: 4
+                      }}>
+                      <div
+                        style={{ width: "0%", height: "100%", background: T.gold, borderRadius: 2 }}
+                      />
                     </div>
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: T.textMute, lineHeight: 1.55 }}>
-                  Submit your first fix to start tracking your bug-hunting range across problem types.
+                  Submit your first fix to start tracking your bug-hunting range across problem
+                  types.
                 </div>
               </>
             )}
@@ -267,9 +290,8 @@ export default function ProgressPage() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: 16,
-            }}
-          >
+              gap: 16
+            }}>
             {tiles.map((s) => (
               <div
                 key={s.l}
@@ -280,9 +302,8 @@ export default function ProgressPage() {
                   padding: "20px 22px",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 6,
-                }}
-              >
+                  gap: 6
+                }}>
                 <div style={{ fontSize: 11.5, color: T.textMute, letterSpacing: 0.2 }}>{s.l}</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginTop: 4 }}>
                   <span
@@ -291,14 +312,15 @@ export default function ProgressPage() {
                       fontWeight: 600,
                       color: s.tone,
                       letterSpacing: -0.6,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
+                      fontVariantNumeric: "tabular-nums"
+                    }}>
                     {s.v}
                   </span>
                   <span style={{ fontSize: 13, color: T.textMute }}>{s.s}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: T.textDim, fontFamily: T.mono }}>{s.trend}</div>
+                <div style={{ fontSize: 11.5, color: T.textDim, fontFamily: T.mono }}>
+                  {s.trend}
+                </div>
               </div>
             ))}
           </div>
@@ -309,18 +331,16 @@ export default function ProgressPage() {
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
-            gap: 16,
-          }}
-        >
+            gap: 16
+          }}>
           {/* Heatmap */}
           <div
             style={{
               background: T.panel,
               border: `1px solid ${T.line}`,
               borderRadius: 12,
-              padding: "20px 22px",
-            }}
-          >
+              padding: "20px 22px"
+            }}>
             <div
               style={{
                 display: "flex",
@@ -328,14 +348,11 @@ export default function ProgressPage() {
                 justifyContent: "space-between",
                 marginBottom: 16,
                 flexWrap: "wrap",
-                gap: 8,
-              }}
-            >
+                gap: 8
+              }}>
               <div>
                 <div style={{ fontSize: 14, color: T.text, fontWeight: 500 }}>Activity</div>
-                <div style={{ fontSize: 11.5, color: T.textMute, marginTop: 2 }}>
-                  Last 16 weeks
-                </div>
+                <div style={{ fontSize: 11.5, color: T.textMute, marginTop: 2 }}>Last 16 weeks</div>
               </div>
               <div
                 style={{
@@ -344,9 +361,8 @@ export default function ProgressPage() {
                   gap: 8,
                   fontSize: 11,
                   color: T.textMute,
-                  fontFamily: T.mono,
-                }}
-              >
+                  fontFamily: T.mono
+                }}>
                 <span>less</span>
                 <div style={{ display: "flex", gap: 3 }}>
                   {HEATMAP_SHADES.map((c, i) => (
@@ -357,7 +373,7 @@ export default function ProgressPage() {
                         height: 10,
                         borderRadius: 2,
                         background: c,
-                        border: i === 0 ? `1px solid ${T.line}` : "none",
+                        border: i === 0 ? `1px solid ${T.line}` : "none"
                       }}
                     />
                   ))}
@@ -366,16 +382,15 @@ export default function ProgressPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "flex-start", overflow: "auto" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", overflow: "auto", position: "relative" }}>
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   gap: 3,
                   marginRight: 8,
-                  paddingTop: 14,
-                }}
-              >
+                  paddingTop: 14
+                }}>
                 {["", "Mon", "", "Wed", "", "Fri", ""].map((d, i) => (
                   <span
                     key={i}
@@ -384,9 +399,8 @@ export default function ProgressPage() {
                       color: T.textMute,
                       height: 12,
                       lineHeight: "12px",
-                      fontFamily: T.mono,
-                    }}
-                  >
+                      fontFamily: T.mono
+                    }}>
                     {d}
                   </span>
                 ))}
@@ -399,16 +413,30 @@ export default function ProgressPage() {
                     fontSize: 10,
                     color: T.textMute,
                     marginBottom: 4,
-                    fontFamily: T.mono,
-                  }}
-                >
-                  {["Jan", "", "", "Feb", "", "", "Mar", "", "", "Apr", "", "", "May", "", "", ""].map(
-                    (m, i) => (
-                      <span key={i} style={{ width: 12, height: 10, lineHeight: "10px" }}>
-                        {m}
-                      </span>
-                    ),
-                  )}
+                    fontFamily: T.mono
+                  }}>
+                  {[
+                    "Jan",
+                    "",
+                    "",
+                    "Feb",
+                    "",
+                    "",
+                    "Mar",
+                    "",
+                    "",
+                    "Apr",
+                    "",
+                    "",
+                    "May",
+                    "",
+                    "",
+                    ""
+                  ].map((m, i) => (
+                    <span key={i} style={{ width: 12, height: 10, lineHeight: "10px" }}>
+                      {m}
+                    </span>
+                  ))}
                 </div>
                 <div style={{ display: "flex", gap: 3 }}>
                   {EMPTY_HEATMAP.map((week, wi) => (
@@ -425,13 +453,34 @@ export default function ProgressPage() {
                             boxShadow:
                               wi === EMPTY_HEATMAP.length - 1 && di === week.length - 1
                                 ? `0 0 0 1.5px ${T.text}`
-                                : "none",
+                                : "none"
                           }}
                         />
                       ))}
                     </div>
                   ))}
                 </div>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(13, 17, 23, 0.7)",
+                  borderRadius: 6,
+                  pointerEvents: "none"
+                }}>
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: T.textMute,
+                    fontFamily: T.mono,
+                    letterSpacing: 0.3
+                  }}>
+                  Activity tracking coming soon
+                </span>
               </div>
             </div>
 
@@ -444,19 +493,27 @@ export default function ProgressPage() {
                 color: T.textDim,
                 paddingTop: 14,
                 borderTop: `1px solid ${T.lineSoft}`,
-                flexWrap: "wrap",
-              }}
-            >
+                flexWrap: "wrap"
+              }}>
               <div>
-                <span style={{ color: T.text, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>0</span>{" "}
+                <span
+                  style={{ color: T.text, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+                  0
+                </span>{" "}
                 longest streak
               </div>
               <div>
-                <span style={{ color: T.text, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>0</span>{" "}
+                <span
+                  style={{ color: T.text, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+                  0
+                </span>{" "}
                 total sessions
               </div>
               <div>
-                <span style={{ color: T.text, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>—</span>{" "}
+                <span
+                  style={{ color: T.text, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
+                  —
+                </span>{" "}
                 avg / session
               </div>
             </div>
@@ -468,9 +525,8 @@ export default function ProgressPage() {
               background: T.panel,
               border: `1px solid ${T.line}`,
               borderRadius: 12,
-              padding: "20px 22px",
-            }}
-          >
+              padding: "20px 22px"
+            }}>
             <div style={{ fontSize: 14, color: T.text, fontWeight: 500, marginBottom: 4 }}>
               By difficulty
             </div>
@@ -488,11 +544,12 @@ export default function ProgressPage() {
                         display: "flex",
                         alignItems: "baseline",
                         justifyContent: "space-between",
-                        marginBottom: 8,
-                      }}
-                    >
+                        marginBottom: 8
+                      }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: 2, background: d.color }} />
+                        <span
+                          style={{ width: 8, height: 8, borderRadius: 2, background: d.color }}
+                        />
                         <span style={{ fontSize: 13, color: T.text }}>{d.l}</span>
                       </div>
                       <div
@@ -501,17 +558,15 @@ export default function ProgressPage() {
                           alignItems: "baseline",
                           gap: 6,
                           fontFamily: T.mono,
-                          fontSize: 12,
-                        }}
-                      >
+                          fontSize: 12
+                        }}>
                         <span
                           style={{
                             color: T.text,
                             fontVariantNumeric: "tabular-nums",
                             fontSize: 18,
-                            fontWeight: 600,
-                          }}
-                        >
+                            fontWeight: 600
+                          }}>
                           {d.solved}
                         </span>
                         <span style={{ color: T.textMute }}>/ {d.total}</span>
@@ -525,15 +580,14 @@ export default function ProgressPage() {
                         height: 6,
                         background: T.bg,
                         borderRadius: 3,
-                        overflow: "hidden",
-                      }}
-                    >
+                        overflow: "hidden"
+                      }}>
                       <div
                         style={{
                           width: `${pct * 100}%`,
                           height: "100%",
                           background: d.color,
-                          borderRadius: 3,
+                          borderRadius: 3
                         }}
                       />
                     </div>
@@ -552,8 +606,8 @@ export default function ProgressPage() {
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                 gap: "10px 24px",
-              }}
-            >
+                position: "relative"
+              }}>
               {BUG_TYPES.map((b) => (
                 <div key={b.l}>
                   <div
@@ -561,18 +615,16 @@ export default function ProgressPage() {
                       display: "flex",
                       alignItems: "baseline",
                       justifyContent: "space-between",
-                      marginBottom: 5,
-                    }}
-                  >
+                      marginBottom: 5
+                    }}>
                     <span style={{ fontSize: 12, color: T.textDim }}>{b.l}</span>
                     <span
                       style={{
                         fontSize: 10.5,
                         color: T.textMute,
                         fontFamily: T.mono,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
+                        fontVariantNumeric: "tabular-nums"
+                      }}>
                       {b.n} solved
                     </span>
                   </div>
@@ -582,12 +634,33 @@ export default function ProgressPage() {
                         width: `${b.pct * 100}%`,
                         height: "100%",
                         borderRadius: 2,
-                        background: b.pct > 0.6 ? T.sage : b.pct > 0.3 ? T.gold : T.red,
+                        background: b.pct > 0.6 ? T.sage : b.pct > 0.3 ? T.gold : T.red
                       }}
                     />
                   </div>
                 </div>
               ))}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(13, 17, 23, 0.7)",
+                  borderRadius: 6,
+                  pointerEvents: "none"
+                }}>
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: T.textMute,
+                    fontFamily: T.mono,
+                    letterSpacing: 0.3
+                  }}>
+                  Bug type tracking coming soon
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { T } from "@/lib/tokens";
 import { TopNav } from "@/components/TopNav";
@@ -27,9 +28,8 @@ function Initials({ name }: { name: string | null }) {
         fontSize: 12,
         fontWeight: 600,
         color: T.bg,
-        flexShrink: 0,
-      }}
-    >
+        flexShrink: 0
+      }}>
       {ch}
     </div>
   );
@@ -43,10 +43,7 @@ export default function LeaderboardPage() {
     let active = true;
     void (async () => {
       try {
-        const { data, error: rpcError } = await supabase.rpc(
-          "leaderboard_top",
-          { lim: 50 },
-        );
+        const { data, error: rpcError } = await supabase.rpc("leaderboard_top", { lim: 50 });
 
         if (!active) return;
 
@@ -78,9 +75,8 @@ export default function LeaderboardPage() {
         flexDirection: "column",
         minHeight: "100dvh",
         background: T.bg,
-        color: T.text,
-      }}
-    >
+        color: T.text
+      }}>
       <TopNav />
 
       <div
@@ -89,9 +85,8 @@ export default function LeaderboardPage() {
           width: "100%",
           maxWidth: 860,
           margin: "0 auto",
-          padding: "32px clamp(20px, 4vw, 48px)",
-        }}
-      >
+          padding: "32px clamp(20px, 4vw, 48px)"
+        }}>
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <div
@@ -100,9 +95,8 @@ export default function LeaderboardPage() {
               letterSpacing: 1.8,
               color: T.textMute,
               textTransform: "uppercase",
-              marginBottom: 8,
-            }}
-          >
+              marginBottom: 8
+            }}>
             Community
           </div>
           <h1
@@ -111,22 +105,17 @@ export default function LeaderboardPage() {
               fontWeight: 600,
               color: T.text,
               letterSpacing: -0.5,
-              margin: 0,
-            }}
-          >
+              margin: 0
+            }}>
             <span
               style={{
                 fontFamily: T.serif,
                 fontStyle: "italic",
-                fontWeight: 400,
-              }}
-            >
+                fontWeight: 400
+              }}>
               Leaderboard
             </span>
-            <span style={{ color: T.textDim, fontWeight: 400 }}>
-              {" "}
-              Top 50
-            </span>
+            <span style={{ color: T.textDim, fontWeight: 400 }}> Top 50</span>
           </h1>
         </div>
 
@@ -136,9 +125,8 @@ export default function LeaderboardPage() {
             background: T.panel,
             border: `1px solid ${T.line}`,
             borderRadius: 10,
-            overflow: "hidden",
-          }}
-        >
+            overflow: "hidden"
+          }}>
           {/* Table header */}
           <div
             style={{
@@ -150,9 +138,8 @@ export default function LeaderboardPage() {
               textTransform: "uppercase",
               letterSpacing: 1.2,
               borderBottom: `1px solid ${T.line}`,
-              background: T.bg,
-            }}
-          >
+              background: T.bg
+            }}>
             <span>Rank</span>
             <span>User</span>
             <span style={{ textAlign: "right" }}>Problems Solved</span>
@@ -160,9 +147,7 @@ export default function LeaderboardPage() {
 
           {/* Body */}
           {isLoading ? (
-            <div
-              style={{ padding: "32px 20px", color: T.textMute, fontSize: 13 }}
-            >
+            <div style={{ padding: "32px 20px", color: T.textMute, fontSize: 13 }}>
               Loading leaderboard...
             </div>
           ) : rows.length === 0 ? (
@@ -171,11 +156,9 @@ export default function LeaderboardPage() {
                 padding: "48px 20px",
                 color: T.textDim,
                 fontSize: 14,
-                textAlign: "center",
-              }}
-            >
-              {error ??
-                "No one has solved any problems yet. Be the first!"}
+                textAlign: "center"
+              }}>
+              {error ?? "No one has solved any problems yet. Be the first!"}
             </div>
           ) : (
             rows.map((r, i) => {
@@ -189,16 +172,10 @@ export default function LeaderboardPage() {
                     padding: "14px 20px",
                     fontSize: 13.5,
                     color: T.text,
-                    borderBottom:
-                      i < rows.length - 1
-                        ? `1px solid ${T.lineSoft}`
-                        : "none",
+                    borderBottom: i < rows.length - 1 ? `1px solid ${T.lineSoft}` : "none",
                     alignItems: "center",
-                    background: isFirst
-                      ? "rgba(212,168,87,0.04)"
-                      : "transparent",
-                  }}
-                >
+                    background: isFirst ? "rgba(212,168,87,0.04)" : "transparent"
+                  }}>
                   {/* Rank */}
                   <span
                     style={{
@@ -206,9 +183,8 @@ export default function LeaderboardPage() {
                       fontSize: 13,
                       fontWeight: isFirst ? 700 : 400,
                       color: isFirst ? T.gold : T.textMute,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
+                      fontVariantNumeric: "tabular-nums"
+                    }}>
                     {r.rank}
                   </span>
 
@@ -218,11 +194,10 @@ export default function LeaderboardPage() {
                       display: "flex",
                       alignItems: "center",
                       gap: 12,
-                      minWidth: 0,
-                    }}
-                  >
+                      minWidth: 0
+                    }}>
                     {r.avatar_url ? (
-                      <img
+                      <Image
                         src={r.avatar_url}
                         alt=""
                         width={32}
@@ -230,7 +205,7 @@ export default function LeaderboardPage() {
                         style={{
                           borderRadius: "50%",
                           flexShrink: 0,
-                          background: T.panel2,
+                          background: T.panel2
                         }}
                       />
                     ) : (
@@ -242,9 +217,8 @@ export default function LeaderboardPage() {
                         fontWeight: isFirst ? 600 : 400,
                         whiteSpace: "nowrap",
                         overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
+                        textOverflow: "ellipsis"
+                      }}>
                       {r.github_username ?? "Anonymous"}
                     </span>
                   </div>
@@ -257,9 +231,8 @@ export default function LeaderboardPage() {
                       fontSize: 13,
                       fontVariantNumeric: "tabular-nums",
                       color: isFirst ? T.gold : T.textDim,
-                      fontWeight: isFirst ? 600 : 400,
-                    }}
-                  >
+                      fontWeight: isFirst ? 600 : 400
+                    }}>
                     {r.problems_solved}
                   </span>
                 </div>
@@ -269,9 +242,7 @@ export default function LeaderboardPage() {
         </div>
 
         {error ? (
-          <div style={{ marginTop: 12, fontSize: 11.5, color: T.textMute }}>
-            Note: {error}
-          </div>
+          <div style={{ marginTop: 12, fontSize: 11.5, color: T.textMute }}>Note: {error}</div>
         ) : null}
       </div>
     </div>

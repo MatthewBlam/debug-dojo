@@ -14,7 +14,7 @@ const NAV: { label: NavKey; href: string }[] = [
   { label: "Problems", href: "/problems" },
   { label: "Submissions", href: "/submissions" },
   { label: "Leaderboard", href: "/leaderboard" },
-  { label: "Progress", href: "/progress" },
+  { label: "Progress", href: "/progress" }
 ];
 
 function initialsFor(email: string | undefined | null): string {
@@ -68,18 +68,16 @@ export function TopNav() {
         padding: "0 28px",
         flexShrink: 0,
         fontFamily: T.sans,
-        gap: 36,
-      }}
-    >
+        gap: 36
+      }}>
       <Link
         href="/"
         style={{
           display: "flex",
           alignItems: "center",
           gap: 10,
-          textDecoration: "none",
-        }}
-      >
+          textDecoration: "none"
+        }}>
         <BrandMark size={36} />
         <span
           style={{
@@ -87,9 +85,8 @@ export function TopNav() {
             fontWeight: 600,
             color: T.text,
             letterSpacing: -0.1,
-            whiteSpace: "nowrap",
-          }}
-        >
+            whiteSpace: "nowrap"
+          }}>
           Debug Dojo
         </span>
       </Link>
@@ -109,9 +106,8 @@ export function TopNav() {
                 background: isActive ? T.panel2 : "transparent",
                 borderRadius: 6,
                 fontWeight: isActive ? 500 : 400,
-                textDecoration: "none",
-              }}
-            >
+                textDecoration: "none"
+              }}>
               {l.label}
             </Link>
           );
@@ -126,7 +122,7 @@ export function TopNav() {
             width: 32,
             height: 32,
             borderRadius: "50%",
-            background: T.panel3,
+            background: T.panel3
           }}
         />
       ) : !user ? (
@@ -139,9 +135,8 @@ export function TopNav() {
             textDecoration: "none",
             padding: "6px 14px",
             borderRadius: 6,
-            background: T.goldDim,
-          }}
-        >
+            background: T.goldDim
+          }}>
           Sign in
         </Link>
       ) : (
@@ -155,9 +150,8 @@ export function TopNav() {
               background: T.panel2,
               borderRadius: 999,
               fontSize: 12,
-              color: T.textDim,
-            }}
-          >
+              color: T.textDim
+            }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden>
               <path
                 d="M6.5 1.5C5 3.5 3 4.5 3 7a3.5 3.5 0 007 0c0-1.4-.7-2.5-1.5-3.5 0 1-.7 1.8-1.5 1.8.5-1.5 0-2.7-1.5-3.8z"
@@ -186,9 +180,8 @@ export function TopNav() {
                 color: T.bg,
                 border: "none",
                 cursor: "pointer",
-                padding: 0,
-              }}
-            >
+                padding: 0
+              }}>
               {initialsFor(user.email)}
             </button>
 
@@ -205,9 +198,8 @@ export function TopNav() {
                   padding: "6px 0",
                   zIndex: 100,
                   fontFamily: T.sans,
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-                }}
-              >
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.4)"
+                }}>
                 <div
                   style={{
                     padding: "8px 14px 10px",
@@ -216,9 +208,8 @@ export function TopNav() {
                     borderBottom: `1px solid ${T.line}`,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                    whiteSpace: "nowrap"
+                  }}>
                   {user.email}
                 </div>
                 <button
@@ -233,15 +224,14 @@ export function TopNav() {
                     fontSize: 13,
                     color: T.red,
                     cursor: "pointer",
-                    fontFamily: T.sans,
+                    fontFamily: T.sans
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.background = T.panel3;
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.background = "none";
-                  }}
-                >
+                  }}>
                   Sign out
                 </button>
               </div>

@@ -48,6 +48,14 @@ class _FunctionComplexityVisitor(ast.NodeVisitor):
         self.has_sort_at_depth: Optional[int] = None  # depth where sort was seen
         self.is_recursive = False
 
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        if node.name == self.func_name:
+            self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        if node.name == self.func_name:
+            self.generic_visit(node)
+
     def visit_For(self, node: ast.For) -> None:
         self.loop_depth += 1
         self.max_loop_depth = max(self.max_loop_depth, self.loop_depth)
@@ -83,7 +91,7 @@ class _FunctionComplexityVisitor(ast.NodeVisitor):
 
     def get_complexity(self) -> str:
         if self.is_recursive:
-            return "unknown"
+            return "recursive"
 
         # Start with loop-depth based complexity
         if self.max_loop_depth == 0:
@@ -112,7 +120,7 @@ class _FunctionComplexityVisitor(ast.NodeVisitor):
 def analyze_complexity(code: str) -> str:
     """Analyze code and return estimated time complexity.
 
-    Returns one of: 'O(1)', 'O(log n)', 'O(n)', 'O(n log n)', 'O(n^2)', 'O(n^3)', 'unknown'
+    Returns one of: 'O(1)', 'O(log n)', 'O(n)', 'O(n log n)', 'O(n^2)', 'O(n^3)', 'recursive', 'unknown'
     """
     try:
         tree = ast.parse(code)
@@ -143,6 +151,9 @@ def complexity_is_acceptable(detected: str, target: str) -> bool:
 
     'unknown' is always acceptable (benefit of the doubt).
     """
+    if detected == "recursive":
+        return False
+
     if detected == "unknown":
         return True
 

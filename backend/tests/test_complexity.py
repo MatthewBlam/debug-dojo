@@ -66,14 +66,14 @@ class TestAnalyzeComplexity:
         )
         assert analyze_complexity(code) == "O(n^2)"
 
-    def test_recursion_returns_unknown(self):
+    def test_recursion_returns_recursive(self):
         code = (
             "def fib(n):\n"
             "    if n <= 1:\n"
             "        return n\n"
             "    return fib(n - 1) + fib(n - 2)\n"
         )
-        assert analyze_complexity(code) == "unknown"
+        assert analyze_complexity(code) == "recursive"
 
     def test_invalid_syntax_returns_unknown(self):
         code = "def f(: this is not valid python"
@@ -128,3 +128,6 @@ class TestComplexityIsAcceptable:
 
     def test_on_log_n_acceptable_for_on2(self):
         assert complexity_is_acceptable("O(n log n)", "O(n^2)") is True
+
+    def test_recursive_is_not_acceptable(self):
+        assert complexity_is_acceptable("recursive", "O(n)") is False

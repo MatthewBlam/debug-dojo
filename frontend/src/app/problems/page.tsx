@@ -34,7 +34,7 @@ const DIFFICULTY_OPTIONS: { value: DifficultyFilter; label: string }[] = [
   { value: "all", label: "All difficulties" },
   { value: "Easy", label: "Easy" },
   { value: "Medium", label: "Medium" },
-  { value: "Hard", label: "Hard" },
+  { value: "Hard", label: "Hard" }
 ];
 
 const PRACTICE_ROW: DisplayRow = {
@@ -43,7 +43,7 @@ const PRACTICE_ROW: DisplayRow = {
   title: `${PRACTICE_PROBLEM.title} — demo`,
   difficulty: PRACTICE_PROBLEM.difficulty,
   tags: PRACTICE_PROBLEM.tags,
-  isPractice: true,
+  isPractice: true
 };
 
 function bugCategoryToTag(raw: string | null): string {
@@ -64,35 +64,24 @@ function ProblemsContent() {
   const router = useRouter();
   const [supabaseRows, setSupabaseRows] = useState<DisplayRow[] | null>(null);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
-  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
-  const [difficulty, setDifficulty] = useState<DifficultyFilter>(
-    () => (searchParams.get("difficulty") as DifficultyFilter) || "all",
-  );
-  const [bugCategory, setBugCategory] = useState<"all" | string>(
-    () => searchParams.get("category") ?? "all",
-  );
+  const search = searchParams.get("q") ?? "";
+  const difficulty: DifficultyFilter =
+    (searchParams.get("difficulty") as DifficultyFilter) || "all";
+  const bugCategory = searchParams.get("category") ?? "all";
 
-  useEffect(() => {
-    const urlQ = searchParams.get("q") ?? "";
-    const urlD = (searchParams.get("difficulty") as DifficultyFilter) || "all";
-    const urlCat = searchParams.get("category") ?? "all";
-    if (urlQ !== search) setSearch(urlQ);
-    if (urlD !== difficulty) setDifficulty(urlD);
-    if (urlCat !== bugCategory) setBugCategory(urlCat);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (search) params.set("q", search);
-    if (difficulty !== "all") params.set("difficulty", difficulty);
-    if (bugCategory !== "all") params.set("category", bugCategory);
-    const next = params.toString();
-    const current = searchParams.toString();
-    if (next !== current) {
-      router.replace(next ? `?${next}` : "/problems");
+  const updateFilter = (updates: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(updates)) {
+      if (v && v !== "all") params.set(k, v);
+      else params.delete(k);
     }
-  }, [search, difficulty, bugCategory, searchParams, router]);
+    const next = params.toString();
+    router.replace(next ? `?${next}` : "/problems");
+  };
+
+  const setSearch = (q: string) => updateFilter({ q });
+  const setDifficulty = (d: DifficultyFilter) => updateFilter({ difficulty: d });
+  const setBugCategory = (c: string) => updateFilter({ category: c });
 
   useEffect(() => {
     let active = true;
@@ -120,8 +109,8 @@ function ProblemsContent() {
               short: String(200 + i).padStart(3, "0"),
               title: p.title,
               difficulty: toDifficultyLevel(p.difficulty),
-              tags: [bugCategoryToTag(p.bug_category)].filter(Boolean),
-            })),
+              tags: [bugCategoryToTag(p.bug_category)].filter(Boolean)
+            }))
         );
       } catch {
         if (active) {
@@ -137,7 +126,7 @@ function ProblemsContent() {
 
   const allRows = useMemo<DisplayRow[]>(
     () => [PRACTICE_ROW, ...(supabaseRows ?? [])],
-    [supabaseRows],
+    [supabaseRows]
   );
 
   const bugCategories = useMemo(() => {
@@ -152,13 +141,9 @@ function ProblemsContent() {
     const q = search.trim().toLowerCase();
     return allRows.filter((r) => {
       if (difficulty !== "all" && r.difficulty !== difficulty) return false;
-      if (bugCategory !== "all" && !r.tags.includes(bugCategoryToTag(bugCategory)))
-        return false;
+      if (bugCategory !== "all" && !r.tags.includes(bugCategoryToTag(bugCategory))) return false;
       if (!q) return true;
-      return (
-        r.title.toLowerCase().includes(q) ||
-        r.tags.some((t) => t.toLowerCase().includes(q))
-      );
+      return r.title.toLowerCase().includes(q) || r.tags.some((t) => t.toLowerCase().includes(q));
     });
   }, [allRows, search, difficulty, bugCategory]);
 
@@ -168,13 +153,13 @@ function ProblemsContent() {
     {
       l: "Easy",
       v: String(allRows.filter((r) => r.difficulty === "Easy").length),
-      s: "problems",
+      s: "problems"
     },
     {
       l: "Hard",
       v: String(allRows.filter((r) => r.difficulty === "Hard").length),
-      s: "problems",
-    },
+      s: "problems"
+    }
   ];
 
   return (
@@ -184,9 +169,8 @@ function ProblemsContent() {
         flexDirection: "column",
         minHeight: "100dvh",
         background: T.bg,
-        color: T.text,
-      }}
-    >
+        color: T.text
+      }}>
       <TopNav />
 
       <div
@@ -195,9 +179,8 @@ function ProblemsContent() {
           width: "100%",
           maxWidth: 1440,
           margin: "0 auto",
-          padding: "32px clamp(20px, 4vw, 48px)",
-        }}
-      >
+          padding: "32px clamp(20px, 4vw, 48px)"
+        }}>
         <div
           style={{
             display: "flex",
@@ -205,9 +188,8 @@ function ProblemsContent() {
             justifyContent: "space-between",
             gap: 24,
             flexWrap: "wrap",
-            marginBottom: 28,
-          }}
-        >
+            marginBottom: 28
+          }}>
           <div>
             <div
               style={{
@@ -215,9 +197,8 @@ function ProblemsContent() {
                 letterSpacing: 1.8,
                 color: T.textMute,
                 textTransform: "uppercase",
-                marginBottom: 8,
-              }}
-            >
+                marginBottom: 8
+              }}>
               Practice · Python
             </div>
             <h1
@@ -226,22 +207,17 @@ function ProblemsContent() {
                 fontWeight: 600,
                 color: T.text,
                 letterSpacing: -0.5,
-                margin: 0,
-              }}
-            >
+                margin: 0
+              }}>
               <span
                 style={{
                   fontFamily: T.serif,
                   fontStyle: "italic",
-                  fontWeight: 400,
-                }}
-              >
+                  fontWeight: 400
+                }}>
                 Find the bug.
               </span>
-              <span style={{ color: T.textDim, fontWeight: 400 }}>
-                {" "}
-                {allRows.length} problems.
-              </span>
+              <span style={{ color: T.textDim, fontWeight: 400 }}> {allRows.length} problems.</span>
             </h1>
           </div>
 
@@ -252,30 +228,25 @@ function ProblemsContent() {
               background: T.panel,
               border: `1px solid ${T.line}`,
               borderRadius: 10,
-              overflow: "hidden",
-            }}
-          >
+              overflow: "hidden"
+            }}>
             {stats.map((s, i) => (
               <div
                 key={s.l}
                 style={{
                   padding: "12px 22px",
                   minWidth: 120,
-                  borderLeft: i ? `1px solid ${T.line}` : "none",
-                }}
-              >
-                <div style={{ fontSize: 11, color: T.textMute, marginBottom: 4 }}>
-                  {s.l}
-                </div>
+                  borderLeft: i ? `1px solid ${T.line}` : "none"
+                }}>
+                <div style={{ fontSize: 11, color: T.textMute, marginBottom: 4 }}>{s.l}</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                   <span
                     style={{
                       fontSize: 22,
                       fontWeight: 600,
                       color: T.text,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
+                      fontVariantNumeric: "tabular-nums"
+                    }}>
                     {s.v}
                   </span>
                   <span style={{ fontSize: 12, color: T.textFaint }}>{s.s}</span>
@@ -292,9 +263,8 @@ function ProblemsContent() {
             alignItems: "center",
             gap: 10,
             marginBottom: 18,
-            flexWrap: "wrap",
-          }}
-        >
+            flexWrap: "wrap"
+          }}>
           <label
             style={{
               display: "flex",
@@ -306,9 +276,8 @@ function ProblemsContent() {
               borderRadius: 8,
               width: 280,
               fontSize: 13,
-              color: T.textDim,
-            }}
-          >
+              color: T.textDim
+            }}>
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
               <circle cx="6" cy="6" r="4" stroke={T.textMute} strokeWidth="1.4" />
               <path
@@ -330,7 +299,7 @@ function ProblemsContent() {
                 outline: "none",
                 color: T.text,
                 fontSize: 13,
-                fontFamily: T.sans,
+                fontFamily: T.sans
               }}
             />
             {search ? (
@@ -345,9 +314,8 @@ function ProblemsContent() {
                   cursor: "pointer",
                   padding: 0,
                   fontSize: 14,
-                  lineHeight: 1,
-                }}
-              >
+                  lineHeight: 1
+                }}>
                 ×
               </button>
             ) : null}
@@ -367,9 +335,8 @@ function ProblemsContent() {
                 border: `1px solid ${T.line}`,
                 borderRadius: 8,
                 fontFamily: T.sans,
-                cursor: "pointer",
-              }}
-            >
+                cursor: "pointer"
+              }}>
               {DIFFICULTY_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value} style={{ background: T.panel }}>
                   {o.label}
@@ -387,9 +354,8 @@ function ProblemsContent() {
                 right: 12,
                 top: "50%",
                 transform: "translateY(-50%)",
-                pointerEvents: "none",
-              }}
-            >
+                pointerEvents: "none"
+              }}>
               <path d="M1.5 3l2.5 2.5L6.5 3" stroke={T.textMute} strokeWidth="1.2" />
             </svg>
           </div>
@@ -401,9 +367,7 @@ function ProblemsContent() {
               <button
                 key={cat}
                 type="button"
-                onClick={() =>
-                  setBugCategory((prev) => (prev === rawCat ? "all" : rawCat))
-                }
+                onClick={() => setBugCategory(bugCategory === rawCat ? "all" : rawCat)}
                 style={{
                   padding: "5px 10px",
                   fontSize: 11.5,
@@ -412,15 +376,14 @@ function ProblemsContent() {
                   border: `1px solid ${isActive ? T.gold : T.line}`,
                   borderRadius: 6,
                   cursor: "pointer",
-                  fontFamily: T.sans,
-                }}
-              >
+                  fontFamily: T.sans
+                }}>
                 {cat}
               </button>
             );
           })}
 
-          {(search || difficulty !== "all" || bugCategory !== "all") ? (
+          {search || difficulty !== "all" || bugCategory !== "all" ? (
             <button
               type="button"
               onClick={() => {
@@ -436,9 +399,8 @@ function ProblemsContent() {
                 border: `1px solid ${T.line}`,
                 borderRadius: 8,
                 fontFamily: T.sans,
-                cursor: "pointer",
-              }}
-            >
+                cursor: "pointer"
+              }}>
               Clear filters
             </button>
           ) : null}
@@ -459,9 +421,8 @@ function ProblemsContent() {
               textDecoration: "none",
               display: "inline-flex",
               alignItems: "center",
-              gap: 6,
-            }}
-          >
+              gap: 6
+            }}>
             Try the demo problem →
           </Link>
         </div>
@@ -472,9 +433,8 @@ function ProblemsContent() {
             background: T.panel,
             border: `1px solid ${T.line}`,
             borderRadius: 10,
-            overflow: "hidden",
-          }}
-        >
+            overflow: "hidden"
+          }}>
           <div
             style={{
               display: "grid",
@@ -485,9 +445,8 @@ function ProblemsContent() {
               textTransform: "uppercase",
               letterSpacing: 1.2,
               borderBottom: `1px solid ${T.line}`,
-              background: T.bg,
-            }}
-          >
+              background: T.bg
+            }}>
             <span>#</span>
             <span>Problem</span>
             <span>Status</span>
@@ -514,23 +473,20 @@ function ProblemsContent() {
                   padding: "14px 20px",
                   fontSize: 13.5,
                   color: T.text,
-                  borderBottom:
-                    i < filtered.length - 1 ? `1px solid ${T.lineSoft}` : "none",
+                  borderBottom: i < filtered.length - 1 ? `1px solid ${T.lineSoft}` : "none",
                   background: r.isPractice ? "rgba(212,168,87,0.04)" : "transparent",
                   alignItems: "center",
                   textDecoration: "none",
-                  transition: "background 120ms ease",
+                  transition: "background 120ms ease"
                 }}
-                className="dd-row"
-              >
+                className="dd-row">
                 <span
                   style={{
                     color: T.textMute,
                     fontFamily: T.mono,
                     fontSize: 12,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
+                    fontVariantNumeric: "tabular-nums"
+                  }}>
                   {r.short}
                 </span>
                 <div
@@ -538,17 +494,15 @@ function ProblemsContent() {
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    minWidth: 0,
-                  }}
-                >
+                    minWidth: 0
+                  }}>
                   <span
                     style={{
                       color: T.text,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
+                      textOverflow: "ellipsis"
+                    }}>
                     {r.title}
                   </span>
                   {r.isPractice ? (

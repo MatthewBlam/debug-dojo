@@ -57,4 +57,4 @@ jobs:
 
       - name: Run tests
         if: steps.scaffold.outputs.present == 'true'
-        run: pytest
+        run: pytest --cov=. --cov-report=term-missing

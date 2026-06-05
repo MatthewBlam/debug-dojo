@@ -64,10 +64,23 @@ async def generate_test_cases(
     if not isinstance(cases, list):
         raise ValueError(f"Expected JSON array, got {type(cases).__name__}")
 
-    # Validate each case has the required keys
     for i, case in enumerate(cases):
-        if "input" not in case or "expected_output" not in case:
-            raise ValueError(f"Test case {i} missing 'input' or 'expected_output' key")
+        if not isinstance(case, dict):
+            raise ValueError(f"Test case {i} is not an object")
+        if "input" not in case:
+            raise ValueError(f"Test case {i} missing 'input' key")
+        if "expected_output" not in case:
+            raise ValueError(f"Test case {i} missing 'expected_output' key")
+        if not isinstance(case["input"], (str, dict, list)):
+            raise ValueError(
+                f"Test case {i} 'input' must be str, dict, or list, "
+                f"got {type(case['input']).__name__}"
+            )
+        if not isinstance(case["expected_output"], (str, dict, list, int, float, bool)):
+            raise ValueError(
+                f"Test case {i} 'expected_output' must be str, dict, list, or primitive, "
+                f"got {type(case['expected_output']).__name__}"
+            )
 
     return cases
 

@@ -13,15 +13,9 @@ const PROBLEM: WorkspaceProblem = {
   tags: PRACTICE_PROBLEM.tags,
   prompt: PRACTICE_PROBLEM.prompt,
   expectedExamples: PRACTICE_PROBLEM.expected,
-  testCases: PRACTICE_PROBLEM.testCases,
+  testCases: PRACTICE_PROBLEM.testCases
 };
 
 export default function EditorTestPage() {
-  return (
-    <Workspace
-      problem={PROBLEM}
-      backHref="/"
-      backLabel="Home"
-    />
-  );
+  return <Workspace problem={PROBLEM} backHref="/" backLabel="Home" />;
 }

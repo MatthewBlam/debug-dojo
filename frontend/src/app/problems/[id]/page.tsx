@@ -14,11 +14,7 @@ type ProblemRecord = {
   target_complexity: string | null;
 };
 
-export default function ProblemPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function ProblemPage({ params }: { params: Promise<{ id: string }> }) {
   const [problem, setProblem] = useState<WorkspaceProblem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +40,7 @@ export default function ProblemPage({
 
         const tags = [
           data.bug_category ? data.bug_category.replace(/_/g, " ") : null,
-          data.target_complexity ? `complexity: ${data.target_complexity}` : null,
+          data.target_complexity ? `complexity: ${data.target_complexity}` : null
         ].filter((x): x is string => Boolean(x));
 
         setProblem({
@@ -57,7 +53,7 @@ export default function ProblemPage({
           tags,
           prompt:
             "The starter code compiles but produces wrong results. Find and fix the defect without changing the function signature.",
-          targetComplexity: data.target_complexity,
+          targetComplexity: data.target_complexity
         });
       } catch {
         if (!active) return;

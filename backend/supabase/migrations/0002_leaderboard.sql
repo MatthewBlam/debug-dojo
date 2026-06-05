@@ -11,10 +11,14 @@ returns table (
   avatar_url text,
   problems_solved bigint
 )
-language sql
+language plpgsql
 stable
 security definer
 as $$
+declare
+  safe_lim int := least(greatest(lim, 1), 100);
+begin
+  return query
   select
     row_number() over (order by count(distinct s.problem_id) desc) as rank,
     p.github_username,
@@ -25,7 +29,8 @@ as $$
   where s.verdict = 'pass'
   group by p.id, p.github_username, p.avatar_url
   order by problems_solved desc
-  limit lim;
+  limit safe_lim;
+end;
 $$;
 
 grant execute on function public.leaderboard_top(int) to anon, authenticated;

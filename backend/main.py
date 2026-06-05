@@ -2,32 +2,72 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
+import os
 import re
-from typing import Any
+import time as _time
+from pathlib import Path
+from typing import Any, Literal
+
+logging.basicConfig(
+    format="%(asctime)s %(levelname)-8s %(name)s  %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
 
 import httpx
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from env_loader import load_env
+
+load_env(Path(__file__).resolve().parent / ".env")
 
 from analysis.complexity import analyze_complexity, complexity_is_acceptable
 from auth import get_optional_user_id
 from judge0.client import run_python
+from judge0.config import get_judge0_url
 from rate_limit import RateLimiter
 
 app = FastAPI()
+
+_default_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+_cors_origins = [
+    o.strip()
+    for o in os.environ.get("CORS_ORIGINS", "").split(",")
+    if o.strip()
+] or _default_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=_cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
+logger.info("CORS origins: %s", _cors_origins)
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):  # type: ignore[no-untyped-def]
+    start = _time.monotonic()
+    response = await call_next(request)
+    elapsed_ms = (_time.monotonic() - start) * 1000
+    logger.info(
+        "%s %s %d %.0fms",
+        request.method,
+        request.url.path,
+        response.status_code,
+        elapsed_ms,
+    )
+    return response
+
+
 _rate_limiter = RateLimiter(max_requests=10, window_seconds=60)
+_judge0_semaphore = asyncio.Semaphore(4)
 
 # ---------------------------------------------------------------------------
 # Request / response models
@@ -36,6 +76,7 @@ _rate_limiter = RateLimiter(max_requests=10, window_seconds=60)
 class SubmissionRequest(BaseModel):
     problem_id: str
     code: str
+    mode: Literal["run", "submit"] = "submit"
 
 
 class TestCaseResultModel(BaseModel):
@@ -137,14 +178,18 @@ def _load_problem(problem_id: str) -> dict[str, Any] | None:
     except RuntimeError:
         return None
 
-    resp = (
-        sb.table("problems")
-        .select("*")
-        .eq("id", problem_id)
-        .eq("status", "published")
-        .maybe_single()
-        .execute()
-    )
+    try:
+        resp = (
+            sb.table("problems")
+            .select("*")
+            .eq("id", problem_id)
+            .eq("status", "published")
+            .maybe_single()
+            .execute()
+        )
+    except Exception:
+        logger.exception("Failed to load problem %s from Supabase", problem_id)
+        return None
     problem_data: dict[str, Any] | None = resp.data if resp else None  # type: ignore[assignment]
     if not problem_data:
         return None
@@ -207,13 +252,46 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/health/deep")
+async def health_deep() -> dict[str, Any]:
+    checks: dict[str, bool] = {}
+
+    try:
+        from db.client import get_supabase
+        sb = get_supabase()
+        sb.table("problems").select("id", count="exact").limit(1).execute()
+        checks["supabase"] = True
+    except Exception:
+        checks["supabase"] = False
+
+    try:
+        async with httpx.AsyncClient(
+            base_url=get_judge0_url(), timeout=5.0
+        ) as client:
+            resp = await client.get("/statuses")
+            checks["judge0"] = resp.status_code == 200
+    except Exception:
+        checks["judge0"] = False
+
+    status = "ok" if all(checks.values()) else "degraded"
+    return {"status": status, **checks}
+
+
 @app.post("/api/v1/submissions", response_model=SubmissionResponse)
 async def submit_code(
     payload: SubmissionRequest,
+    request: Request,
     user_id: str | None = Depends(get_optional_user_id),
 ) -> SubmissionResponse:
     if user_id:
-        _rate_limiter.check(user_id)
+        bucket_key = user_id
+    else:
+        client_ip = (
+            request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+            or (request.client.host if request.client else "")
+        )
+        bucket_key = f"anon:{client_ip}" if client_ip else "anon:global"
+    _rate_limiter.check(bucket_key)
 
     problem = _load_problem(payload.problem_id)
     if problem is None:
@@ -226,10 +304,11 @@ async def submit_code(
     if not test_cases:
         raise HTTPException(status_code=500, detail="Problem has no test cases")
 
-    results = await asyncio.gather(*[
-        _run_single_test(wrapper, tc["input"], tc["expected_output"])
-        for tc in test_cases
-    ])
+    async def _bounded_test(tc: dict[str, Any]) -> TestCaseResultModel:
+        async with _judge0_semaphore:
+            return await _run_single_test(wrapper, tc["input"], tc["expected_output"])
+
+    results = await asyncio.gather(*[_bounded_test(tc) for tc in test_cases])
 
     cases_passed = sum(1 for r in results if r.passed)
     cases_total = len(results)
@@ -248,7 +327,7 @@ async def submit_code(
     first_stdout = results[0].actual or "" if results else ""
 
     submission_id: str | None = None
-    if user_id and payload.problem_id != PRACTICE_PROBLEM_ID:
+    if payload.mode == "submit" and user_id and payload.problem_id != PRACTICE_PROBLEM_ID:
         try:
             from db.client import get_supabase
 
@@ -271,8 +350,14 @@ async def submit_code(
             rows: list[Any] = row.data or []
             if rows:
                 submission_id = str(rows[0]["id"])
-        except RuntimeError:
-            pass
+        except Exception:
+            logger.exception("Failed to persist submission for user %s", user_id)
+
+    for tc, r in zip(test_cases, results):
+        if tc.get("is_hidden"):
+            r.input = None
+            r.expected = None
+            r.actual = "hidden" if not r.passed else None
 
     return SubmissionResponse(
         verdict=verdict,

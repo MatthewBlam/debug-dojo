@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 
-import google.generativeai as genai
+from google import genai
+from google.genai import errors, types
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_PROVIDER_TIMEOUT: float = 60.0
 
 
 class GeminiClient:
@@ -13,10 +19,17 @@ class GeminiClient:
         key = api_key or os.environ.get("GEMINI_API_KEY", "")
         if not key:
             raise RuntimeError("GEMINI_API_KEY must be set")
-        genai.configure(api_key=key)
-        self._model = genai.GenerativeModel(model)
+        self._client = genai.Client(api_key=key)
+        self._model_name = model
 
-    async def generate(self, prompt: str, *, temperature: float = 0.7, max_retries: int = 3) -> str:
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        temperature: float = 0.7,
+        max_retries: int = 3,
+        timeout: float = DEFAULT_PROVIDER_TIMEOUT,
+    ) -> str:
         """Send prompt to Gemini and return text response.
 
         Retries on 429 (rate limit) with exponential backoff.
@@ -24,21 +37,36 @@ class GeminiClient:
         last_error: Exception | None = None
         for attempt in range(max_retries):
             try:
-                response = await asyncio.to_thread(
-                    self._model.generate_content,
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        temperature=temperature,
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        self._client.models.generate_content,
+                        model=self._model_name,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            temperature=temperature,
+                        ),
                     ),
+                    timeout=timeout,
                 )
                 return response.text
-            except Exception as e:
+            except asyncio.TimeoutError:
+                logger.error(
+                    "Gemini call timed out after %.1fs (attempt %d/%d)",
+                    timeout,
+                    attempt + 1,
+                    max_retries,
+                )
+                raise TimeoutError(
+                    f"Gemini provider timed out after {timeout}s"
+                )
+            except errors.APIError as e:
                 last_error = e
-                error_str = str(e).lower()
-                if "429" in error_str or "resource" in error_str or "rate" in error_str:
+                if e.code == 429:
                     wait = 2**attempt
                     await asyncio.sleep(wait)
                     continue
+                raise
+            except Exception:
                 raise
         raise last_error  # type: ignore[misc]
 
